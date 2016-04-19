@@ -51,11 +51,7 @@ public class MapFragment extends Fragment {
 
         return v;
     }
-
-
-
 //        mMap.setMyLocationEnabled(true);
-
 
     @Override
     public void onResume() {
