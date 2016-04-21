@@ -12,4 +12,9 @@
     <string name="title_activity_address">AddressActivity</string>
     <string name="search">Search</string>
     <string name="clear_search">Clear Search</string>
+    <string name="json_row">rows</string>
+    <string name="json_element">elements</string>
+    <string name="json_duration">duration</string>
+    <string name="json_text">text</string>
+    <string name="json_distance">distance</string>
 </resources>

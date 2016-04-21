@@ -1,4 +1,7 @@
-package com.example.sammengistu.nearest;
+package com.example.sammengistu.nearest.adapters;
+
+import com.example.sammengistu.nearest.Address;
+import com.example.sammengistu.nearest.R;
 
 import android.app.Activity;
 import android.view.View;
@@ -28,7 +31,7 @@ public class MapListAdapter extends ArrayAdapter<Address> {
                 .inflate(R.layout.map_list_item_address, null);
         }
 
-        Address a = getItem(postion);
+        Address addressToShowOnMap = getItem(postion);
 
         TextView addressTitleTextView = (TextView)
             convertView.findViewById(R.id.list_item_title_of_address);
@@ -39,20 +42,20 @@ public class MapListAdapter extends ArrayAdapter<Address> {
         TextView commuteDistance = (TextView)
             convertView.findViewById(R.id.list_item_distance_details);
 
-        if (a.getDuration() != null) {
-            commuteTime.setText(a.getDuration());
+        if (addressToShowOnMap.getDuration() != null) {
+            commuteTime.setText(addressToShowOnMap.getDuration());
         } else {
             commuteTime.setText("0 min");
         }
 
-        if (a.getDistance() != null) {
-            commuteDistance.setText(a.getDistance());
+        if (addressToShowOnMap.getDistance() != null) {
+            commuteDistance.setText(addressToShowOnMap.getDistance());
         } else {
             commuteDistance.setText("0 miles");
         }
 
-        addressTitleTextView.setText(a.getTitle());
-        streetTextView.setText(a.getStreet());
+        addressTitleTextView.setText(addressToShowOnMap.getTitle());
+        streetTextView.setText(addressToShowOnMap.getStreet());
 
         return convertView;
     }

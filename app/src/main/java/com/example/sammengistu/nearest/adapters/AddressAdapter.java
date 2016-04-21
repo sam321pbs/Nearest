@@ -1,4 +1,7 @@
-package com.example.sammengistu.nearest;
+package com.example.sammengistu.nearest.adapters;
+
+import com.example.sammengistu.nearest.Address;
+import com.example.sammengistu.nearest.R;
 
 import android.app.Activity;
 import android.view.View;
@@ -10,9 +13,6 @@ import android.widget.TextView;
 
 import java.util.List;
 
-/**
- * Created by SamMengistu on 4/20/16.
- */
 public class AddressAdapter extends ArrayAdapter<Address> {
 
     private Activity mActivity;
@@ -45,8 +45,8 @@ public class AddressAdapter extends ArrayAdapter<Address> {
             }
         });
 
-        addressTitleTextView.setText(a.getTitle());
-        streetTextView.setText(a.getStreet());
+        addressTitleTextView.setText(a.getFullAddress());
+        streetTextView.setText(a.getFullAddress());
         showOnMap.setChecked(a.isShowOnMap());
 
         return convertView;

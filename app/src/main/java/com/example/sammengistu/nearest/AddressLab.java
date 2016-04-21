@@ -4,17 +4,16 @@ import android.content.Context;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
-/**
- * Created by SamMengistu on 5/19/15.
- */
+
 public class AddressLab {
     private static final String FILENAME = "goal.json";
     private static final String TAG = "GoalLab";
 
-    private ArrayList<Address> mAddressBook;
-    private ArrayList<Address> mAddressesToShowOnMap;
+    private List<Address> mAddressBook;
+    private List<Address> mAddressesToShowOnMap;
 
     private static AddressLab sAddressLab;
     private AddressJSONSerializer mSerializer;
@@ -39,7 +38,7 @@ public class AddressLab {
         return sAddressLab;
     }
 
-    public ArrayList<Address> getmAddressBook() {
+    public List<Address> getmAddressBook() {
         return mAddressBook;
     }
 

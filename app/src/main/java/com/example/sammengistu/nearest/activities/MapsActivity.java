@@ -5,20 +5,23 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapView;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import com.example.sammengistu.nearest.Address;
 import com.example.sammengistu.nearest.AddressLab;
-import com.example.sammengistu.nearest.MapListAdapter;
 import com.example.sammengistu.nearest.R;
+import com.example.sammengistu.nearest.SetUpCommuteInfoForAddresses;
+import com.example.sammengistu.nearest.adapters.MapListAdapter;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.location.Geocoder;
 import android.location.Location;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -34,15 +37,17 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MapsActivity extends FragmentActivity implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+public class MapsActivity extends FragmentActivity implements
+    GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     private static final String TAG = "MapActivity";
     private GoogleMap mMap;
-    private ListView lv;
+    private ListView mCommuteInfoListView;
     private List<android.location.Address> geocodeMatches;
     private List<Address> mAddressesToShowOnMap = new ArrayList<>();
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
+    private ArrayAdapter<Address> mAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,6 +55,7 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
         setContentView(R.layout.activity_maps);
         setUpMapIfNeeded();
         geocodeMatches = null;
+        mMap.setMyLocationEnabled(true);
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
             != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
@@ -65,6 +71,8 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
         }
 
         if (mGoogleApiClient == null) {
+            // ATTENTION: This "addApi(AppIndex.API)"was auto-generated to implement the App Indexing API.
+            // See https://g.co/AppIndexing/AndroidStudio for more information.
             mGoogleApiClient = new GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
@@ -72,10 +80,7 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
                 .build();
         }
 
-        mMap.setMyLocationEnabled(true);
-
-
-        ArrayList<Address> addresses =
+        List<Address> addresses =
             AddressLab.get(getApplicationContext()).getmAddressBook();
 
         for (Address a : addresses) {
@@ -84,18 +89,16 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
             }
         }
 
-        final ArrayAdapter<Address> adapter = new MapListAdapter(MapsActivity.this, mAddressesToShowOnMap);
+        mCommuteInfoListView = (ListView) findViewById(android.R.id.list);
+        mCommuteInfoListView.getLayoutParams().height = 400;
 
-        lv = (ListView) findViewById(android.R.id.list);
-        lv.getLayoutParams().height = 400;
+        mAdapter = new MapListAdapter(this, mAddressesToShowOnMap);
+        mCommuteInfoListView.setAdapter(mAdapter);
 
-        lv.setAdapter(adapter);
-
-
-        lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        mCommuteInfoListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> a, View v, int position, long id) {
-                Address address = ((MapListAdapter) lv.getAdapter()).getItem(position);
+                Address address = ((MapListAdapter) mCommuteInfoListView.getAdapter()).getItem(position);
 
                 LatLng currentItemOnList = new LatLng(address.getLatitude(), address.getLongitude());
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentItemOnList, 15));
@@ -109,7 +112,7 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
      * call {@link #setUpMap()} once when {@link #mMap} is not null.
      * <p/>
      * If it isn't installed {@link SupportMapFragment} (and
-     * {@link com.google.android.gms.maps.MapView MapView}) will show a prompt for the user to
+     * {@link MapView MapView}) will show a prompt for the user to
      * install/update the Google Play services APK on their device.
      * <p/>
      * A user can return to this FragmentActivity after following the prompt and correctly
@@ -118,6 +121,7 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
      * stopped or paused), {@link #onCreate(Bundle)} may not be called again so we should call this
      * method in {@link #onResume()} to guarantee that it will be called.
      */
+    @SuppressWarnings("deprecation")
     private void setUpMapIfNeeded() {
         // Do a null check to confirm that we have not already instantiated the map.
         if (mMap == null) {
@@ -150,7 +154,7 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
                     addressToDisplay.setLatitude(latitude);
                     addressToDisplay.setLongitude(longitude);
                 }
-                Marker marker = mMap.addMarker(
+                mMap.addMarker(
                     new MarkerOptions().position(new LatLng(latitude, longitude))
                         .visible(true)
                         .title(addressToDisplay.getTitle())
@@ -172,9 +176,6 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
     protected void onResume() {
         super.onResume();
         setUpMapIfNeeded();
-
-        //  setUpTravelInfo();
-        ((MapListAdapter) lv.getAdapter()).notifyDataSetChanged();
     }
 
     @Override
@@ -182,12 +183,12 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
         mGoogleApiClient.connect();
 
         super.onStart();
-
     }
     @Override
     protected void onStop() {
         mGoogleApiClient.disconnect();
         super.onStop();
+
     }
 
     @Override
@@ -213,6 +214,8 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
 
         if (mLastLocation != null) {
             zoomOnMyLocation();
+            new LoadCommuteInfoTaskk(this, mCommuteInfoListView,  mLastLocation,
+                mAddressesToShowOnMap, mMap).execute();
         } else {
             Log.i(TAG, "last location = null");
         }
@@ -227,4 +230,42 @@ public class MapsActivity extends FragmentActivity implements GoogleApiClient.Co
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
     }
+
+    public class LoadCommuteInfoTaskk extends AsyncTask<Void, Void, Void> {
+
+        private Location mCurrentLocation;
+        private Activity mAppContext;
+        private List<Address> mAddressesToShowOnMap;
+        private ListView mCommuteInfoListView;
+        private GoogleMap mGoogleMap;
+
+        public LoadCommuteInfoTaskk (Activity appContext, ListView listView,
+                                    Location currentLocation, List<Address> addressToShowOnMap,
+                                    GoogleMap googleMap){
+
+            mCurrentLocation = currentLocation;
+            mAppContext = appContext;
+            mAddressesToShowOnMap = addressToShowOnMap;
+            mCommuteInfoListView = listView;
+            mGoogleMap = googleMap;
+        }
+        @Override
+        protected Void doInBackground(Void... params) {
+            SetUpCommuteInfoForAddresses setUpCommuteInfoForAddresses =
+                new SetUpCommuteInfoForAddresses(mAppContext, mCurrentLocation);
+
+            setUpCommuteInfoForAddresses.setUpTravelInfo();
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+
+            //TODO: data not updated
+            //  setUpTravelInfo();
+            ((MapListAdapter) mCommuteInfoListView.getAdapter()).notifyDataSetChanged();
+        }
+    }
+
 }

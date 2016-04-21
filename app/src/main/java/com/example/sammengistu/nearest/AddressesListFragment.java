@@ -1,13 +1,18 @@
 package com.example.sammengistu.nearest;
 
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
+import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.places.AutocompleteFilter;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.ui.PlaceAutocomplete;
+
 import com.example.sammengistu.nearest.activities.AddressActivity;
 import com.example.sammengistu.nearest.activities.MapsActivity;
+import com.example.sammengistu.nearest.adapters.AddressAdapter;
 
 import android.app.Fragment;
-import android.content.Context;
 import android.content.Intent;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -28,12 +33,14 @@ import java.util.List;
 public class AddressesListFragment extends Fragment implements AbsListView.OnItemClickListener {
 
     private static final String TAG = "AddressListFragment";
+    private int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
 
     private Button mMapButton;
     private List<Address> mAddresses;
 
     private AbsListView mListView;
     private ListAdapter mAdapter;
+    private Address mSelectedAddress;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -64,9 +71,8 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
         mMapButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (networkConnection()) {
-                    SetUpCommuteInfoForAddresses setUpCommuteInfoForAddresses = new SetUpCommuteInfoForAddresses(getActivity());
-                    setUpCommuteInfoForAddresses.setUpTravelInfo();
+                if (CheckNetwork.networkConnection(getActivity())) {
+
                     Intent i = new Intent(getActivity(), MapsActivity.class);
                     startActivity(i);
                 } else {
@@ -77,18 +83,6 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
         });
 
         return v;
-    }
-
-    private boolean networkConnection() {
-        ConnectivityManager connectivityManager = (ConnectivityManager)
-                getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
-        if (connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_MOBILE).getState() == NetworkInfo.State.CONNECTED ||
-                connectivityManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI).getState() == NetworkInfo.State.CONNECTED) {
-            //we are connected to a network
-            return true;
-        } else {
-            return false;
-        }
     }
 
     @Override
@@ -114,18 +108,58 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_item_new_Address:
-                Address address = new Address();
 
-                AddressLab.get(getActivity()).addAddress(address);
-                Intent i = new Intent(getActivity(), AddressActivity.class);
-                i.putExtra(AddressFragment.ADDRESS_ID, address.getmId());
-                startActivity(i);
+                try {
+
+                    AutocompleteFilter typeFilter = new AutocompleteFilter.Builder()
+                        .setTypeFilter(AutocompleteFilter.TYPE_FILTER_ADDRESS)
+                        .build();
+
+                    Intent intent =
+                        new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_OVERLAY)
+                            .setFilter(typeFilter)
+                            .build(getActivity());
+                    startActivityForResult(intent, PLACE_AUTOCOMPLETE_REQUEST_CODE);
+                } catch (GooglePlayServicesRepairableException e) {
+                    // TODO: Handle the error.
+                    Log.i(TAG, e.getMessage());
+                } catch (GooglePlayServicesNotAvailableException e) {
+                    // TODO: Handle the error.
+                    Log.i(TAG, e.getMessage());
+                }
                 return true;
 
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        if (requestCode == PLACE_AUTOCOMPLETE_REQUEST_CODE) {
+            if (resultCode == getActivity().RESULT_OK) {
+                Place place = PlaceAutocomplete.getPlace(getActivity(), data);
+
+                Log.i(TAG, "Place: " + place.getAddress());
+
+                Address address = new Address(place.getAddress().toString());
+
+                AddressLab.get(getActivity()).addAddress(address);
+
+                AddressLab.get(getActivity()).saveAddress();
+
+            } else if (resultCode == PlaceAutocomplete.RESULT_ERROR) {
+                Status status = PlaceAutocomplete.getStatus(getActivity(), data);
+                // TODO: Handle the error.
+                Log.i(TAG, status.getStatusMessage());
+
+            } else {
+                // The user canceled the operation.
+            }
+        }
+    }
+
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {

@@ -1,10 +1,10 @@
 package com.example.sammengistu.nearest;
 
-import android.content.Context;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONTokener;
+
+import android.content.Context;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -15,10 +15,8 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.List;
 
-/**
- * Created by SamMengistu on 5/19/15.
- */
 public class AddressJSONSerializer {
     private Context mContext;
     private String mFileName;
@@ -28,7 +26,7 @@ public class AddressJSONSerializer {
         mFileName = f;
     }
 
-    public void saveAddress(ArrayList<Address> goals)
+    public void saveAddress(List<Address> goals)
             throws JSONException, IOException {
         //Build an array in JSON
         JSONArray array = new JSONArray();
@@ -49,8 +47,8 @@ public class AddressJSONSerializer {
         }
     }
 
-    public ArrayList<Address> loadAddresses() throws IOException, JSONException {
-        ArrayList<Address> goals = new ArrayList<Address>();
+    public List<Address> loadAddresses() throws IOException, JSONException {
+        List<Address> goals = new ArrayList<Address>();
         BufferedReader reader = null;
         try {
             //Open and read the file into a StringBuilder

@@ -5,9 +5,7 @@ import org.json.JSONObject;
 
 import java.util.UUID;
 
-/**
- * Created by SamMengistu on 6/23/15.
- */
+
 public class Address {
 
     private static final String JSON_ID = "Address.Id";
@@ -19,6 +17,7 @@ public class Address {
     private static final String JSON_SHOW_ON_MAP = "Address.ShowOnMap";
 
     private UUID mId;
+    private String mFullAddress;
     private String mTitle;
     private String mStreet;
     private String mCity;
@@ -30,8 +29,9 @@ public class Address {
     private String mDistance;
     private String mDuration;
 
-    public Address() {
+    public Address(String fullAddress) {
         mId = UUID.randomUUID();
+        mFullAddress = fullAddress;
     }
 
     public Address(JSONObject json) throws JSONException {
@@ -67,6 +67,10 @@ public class Address {
         json.put(JSON_SHOW_ON_MAP, mShowOnMap);
 
         return json;
+    }
+
+    public String getFullAddress(){
+        return mFullAddress;
     }
 
     public double getLatitude() {
@@ -157,12 +161,7 @@ public class Address {
         mDuration = duration;
     }
 
-    public String getFullAddress() {
-        return mStreet + " "  + mCity + " " + mState + " " + mZipCode;
-    }
-
     public String getGoogleFormattedAddress(){
-        return  mStreet.replaceAll(" ", "+") + "+" +
-                mCity.replaceAll(" ", "+") + "+" + mState.replaceAll(" ", "+")+ "+" + mZipCode;
+        return  getFullAddress().replaceAll(",", "").replaceAll(" ", "+");
     }
 }

@@ -1,11 +1,5 @@
 package com.example.sammengistu.nearest;
 
-import android.content.Context;
-import android.location.Geocoder;
-import android.location.Location;
-import android.location.LocationManager;
-import android.util.Log;
-
 import com.squareup.okhttp.Call;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.OkHttpClient;
@@ -16,6 +10,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.content.Context;
+import android.location.Geocoder;
+import android.location.Location;
+import android.util.Log;
+
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
@@ -25,24 +24,23 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * Created by SamMengistu on 7/7/15.
- */
 public class SetUpCommuteInfoForAddresses {
 
     private static final String TAG = "SetUpCommute";
-    private ArrayList<Address> mAddresses;
+    private List<Address> mAddresses;
     private String mUrlForMaps;
     private Geocoder mGeoCoder;
-    private LocationManager mLocationManager;
+    private Context mAppContext;
+    private Location mCurrentLocation;
 
-    public SetUpCommuteInfoForAddresses (Context appContext){
+    public SetUpCommuteInfoForAddresses (Context appContext, Location currentLocation){
 
+        mCurrentLocation = currentLocation;
+        mAppContext = appContext;
         mAddresses = new ArrayList<>();
         mAddresses = AddressLab.get(appContext).getmAddressBook();
         mUrlForMaps = AddressLab.get(appContext).createAddressUrl();
         mGeoCoder = new Geocoder(appContext, Locale.getDefault());
-        mLocationManager =  (LocationManager) appContext.getSystemService(Context.LOCATION_SERVICE);
     }
 
     public void setUpTravelInfo() {
@@ -52,7 +50,9 @@ public class SetUpCommuteInfoForAddresses {
                         new URL("https://maps.googleapis.com/maps/api/distancematrix/json?" +
                                 "origins=" + getAddressOfCurrentLocation() +
                                 "&destinations=" + URLEncoder.encode(mUrlForMaps, "UTF-8").replaceAll("\\+", "%20") +
-                                "&units=imperial&types=geocode&language=en&sensor=true&key=AIzaSyCjZEowtt-LIAMjX9ghcVHWJ1nVc7V6DbE");
+                                "&units=imperial&types=geocode&language=en&sensor=true&key=" +
+                            //Todo: Remove key
+                            "AIzaSyCjZEowtt-LIAMjX9ghcVHWJ1nVc7V6DbE");
 
                 Log.i(TAG, googlePlaces + "");
 
@@ -77,8 +77,8 @@ public class SetUpCommuteInfoForAddresses {
                         try {
                             String jsonData = response.body().string();
                             if (response.isSuccessful()) {
-                                ArrayList<String> destinationTimes = getDurationOfCommutes(jsonData);
-                                ArrayList<String> destinationDistances = getDistanceOfCommutes(jsonData);
+                                List<String> destinationTimes = getDurationOfCommutes(jsonData);
+                                List<String> destinationDistances = getDistanceOfCommutes(jsonData);
                                 for (int i = 0; i < destinationTimes.size(); i++) {
                                     mAddresses.get(i).setDuration(destinationTimes.get(i));
                                     mAddresses.get(i).setDistance(destinationDistances.get(i));
@@ -100,54 +100,57 @@ public class SetUpCommuteInfoForAddresses {
         }
     }
 
-    private ArrayList<String> getDurationOfCommutes(String jsonData) throws JSONException {
+    private JSONArray getFromJSONArray (String jsonData) throws JSONException{
         JSONObject jsonObject = new JSONObject(jsonData);
 
-        ArrayList<String> destinationTimes = new ArrayList<>();
-
-        JSONArray row = jsonObject.getJSONArray("rows");
+        JSONArray row = jsonObject.getJSONArray(mAppContext.getString(R.string.json_row));
         JSONObject object = row.getJSONObject(0);
-        JSONArray elements = object.getJSONArray("elements");
+        JSONArray elements = object.getJSONArray(mAppContext.getString(R.string.json_element));
+
+        return elements;
+    }
+
+    private List<String> getDurationOfCommutes(String jsonData) throws JSONException {
+
+        List<String> destinationTimes = new ArrayList<>();
+
+        JSONArray elements = getFromJSONArray(jsonData);
 
         for (int i = 0; i < elements.length(); i++) {
 
             JSONObject elementsData = elements.getJSONObject(i);
 
-            JSONObject trueDuration = elementsData.getJSONObject("duration");
+            JSONObject trueDuration = elementsData.getJSONObject(mAppContext.getString(R.string.json_duration));
 
-            String durationString = trueDuration.getString("text");
-            destinationTimes.add(durationString);
+            destinationTimes.add(trueDuration.getString(mAppContext.getString(R.string.json_text)));
         }
 
         return destinationTimes;
     }
 
     private ArrayList<String> getDistanceOfCommutes(String jsonData) throws JSONException {
-        JSONObject jsonObject = new JSONObject(jsonData);
 
         ArrayList<String> destinationDistance = new ArrayList<>();
 
-        JSONArray row = jsonObject.getJSONArray("rows");
-        JSONObject object = row.getJSONObject(0);
-        JSONArray elements = object.getJSONArray("elements");
+        JSONArray elements = getFromJSONArray(jsonData);
 
         for (int i = 0; i < elements.length(); i++) {
 
             JSONObject elementsData = elements.getJSONObject(i);
 
-            JSONObject trueDuration = elementsData.getJSONObject("distance");
+            JSONObject trueDuration = elementsData.getJSONObject(
+                mAppContext.getString(R.string.json_distance));
 
-            String distanceString = trueDuration.getString("text");
-            destinationDistance.add(distanceString);
+            destinationDistance.add(trueDuration.getString(mAppContext.getString(R.string.json_text)));
         }
 
         return destinationDistance;
     }
 
     private String getAddressOfCurrentLocation() {
-        Location location = mLocationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        double longitude = location.getLongitude();
-        double latitude = location.getLatitude();
+
+        double longitude = mCurrentLocation.getLongitude();
+        double latitude = mCurrentLocation.getLatitude();
         String currentLocationAddress = "";
 
 
@@ -155,6 +158,7 @@ public class SetUpCommuteInfoForAddresses {
         try {
             List<android.location.Address> address = mGeoCoder.getFromLocation(latitude, longitude, 1);
             int maxLines = address.get(0).getMaxAddressLineIndex();
+
             for (int i = 0; i < maxLines; i++) {
                 String addressStr = address.get(0).getAddressLine(i);
                 builder.append(addressStr);
