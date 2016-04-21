@@ -1,4 +1,6 @@
-package com.example.sammengistu.nearest;
+package com.example.sammengistu.nearest.dialogs;
+
+import com.example.sammengistu.nearest.R;
 
 import android.app.AlertDialog;
 import android.app.Dialog;

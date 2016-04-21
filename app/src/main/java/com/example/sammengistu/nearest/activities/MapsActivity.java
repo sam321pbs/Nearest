@@ -10,7 +10,7 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-import com.example.sammengistu.nearest.Address;
+import com.example.sammengistu.nearest.models.Address;
 import com.example.sammengistu.nearest.AddressLab;
 import com.example.sammengistu.nearest.R;
 import com.example.sammengistu.nearest.SetUpCommuteInfoForAddresses;

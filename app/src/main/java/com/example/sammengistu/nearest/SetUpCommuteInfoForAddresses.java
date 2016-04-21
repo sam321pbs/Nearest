@@ -1,5 +1,6 @@
 package com.example.sammengistu.nearest;
 
+import com.example.sammengistu.nearest.models.Address;
 import com.squareup.okhttp.Call;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.OkHttpClient;

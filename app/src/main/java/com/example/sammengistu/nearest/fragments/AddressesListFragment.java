@@ -1,4 +1,4 @@
-package com.example.sammengistu.nearest;
+package com.example.sammengistu.nearest.fragments;
 
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
@@ -7,13 +7,18 @@ import com.google.android.gms.location.places.AutocompleteFilter;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocomplete;
 
-import com.example.sammengistu.nearest.activities.AddressActivity;
+import com.example.sammengistu.nearest.AddressLab;
+import com.example.sammengistu.nearest.CheckNetwork;
+import com.example.sammengistu.nearest.R;
 import com.example.sammengistu.nearest.activities.MapsActivity;
 import com.example.sammengistu.nearest.adapters.AddressAdapter;
+import com.example.sammengistu.nearest.dialogs.PopUpMapDialog;
+import com.example.sammengistu.nearest.dialogs.TypeTitleDialog;
+import com.example.sammengistu.nearest.models.Address;
 
-import android.support.v4.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -92,10 +97,13 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
 
         Log.i(TAG, address.isShowOnMap() + "");
 
-        Intent i = new Intent(getActivity(), AddressActivity.class);
-        i.putExtra(AddressFragment.ADDRESS_ID, address.getmId());
-        i.putExtra(AddressFragment.ADDRESS_SHOW_ON_MAP, address.isShowOnMap());
-        startActivity(i);
+//        Intent i = new Intent(getActivity(), AddressActivity.class);
+//        i.putExtra(AddressFragment.ADDRESS_ID, address.getmId());
+//        i.putExtra(AddressFragment.ADDRESS_SHOW_ON_MAP, address.isShowOnMap());
+//        startActivity(i);
+
+        PopUpMapDialog popUpMapDialog = PopUpMapDialog.newInstance(address.getFullAddress());
+        popUpMapDialog.show(getFragmentManager(), "Pop up map");
     }
 
 
@@ -172,7 +180,6 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
             AddressLab.get(getActivity()).saveAddress();
         }
     }
-
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {

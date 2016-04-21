@@ -3,6 +3,7 @@ package com.example.sammengistu.nearest;
 import com.google.android.gms.maps.GoogleMap;
 
 import com.example.sammengistu.nearest.adapters.MapListAdapter;
+import com.example.sammengistu.nearest.models.Address;
 
 import android.app.Activity;
 import android.location.Location;

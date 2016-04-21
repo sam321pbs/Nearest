@@ -1,6 +1,6 @@
 package com.example.sammengistu.nearest.adapters;
 
-import com.example.sammengistu.nearest.Address;
+import com.example.sammengistu.nearest.models.Address;
 import com.example.sammengistu.nearest.R;
 
 import android.app.Activity;

@@ -5,7 +5,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.FragmentManager;
 
-import com.example.sammengistu.nearest.AddressFragment;
+import com.example.sammengistu.nearest.fragments.AddressFragment;
 import com.example.sammengistu.nearest.R;
 
 import java.util.UUID;

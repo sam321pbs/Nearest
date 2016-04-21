@@ -1,5 +1,7 @@
 package com.example.sammengistu.nearest;
 
+import com.example.sammengistu.nearest.models.Address;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONTokener;
