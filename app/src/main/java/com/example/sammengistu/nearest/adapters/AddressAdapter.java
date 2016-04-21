@@ -45,7 +45,7 @@ public class AddressAdapter extends ArrayAdapter<Address> {
             }
         });
 
-        addressTitleTextView.setText(a.getFullAddress());
+        addressTitleTextView.setText(a.getTitle());
         streetTextView.setText(a.getFullAddress());
         showOnMap.setChecked(a.isShowOnMap());
 

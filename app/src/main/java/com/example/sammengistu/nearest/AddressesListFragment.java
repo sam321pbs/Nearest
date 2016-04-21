@@ -11,7 +11,7 @@ import com.example.sammengistu.nearest.activities.AddressActivity;
 import com.example.sammengistu.nearest.activities.MapsActivity;
 import com.example.sammengistu.nearest.adapters.AddressAdapter;
 
-import android.app.Fragment;
+import android.support.v4.app.Fragment;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -34,6 +34,7 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
 
     private static final String TAG = "AddressListFragment";
     private int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
+    private static final int GET_TITLE = 2;
 
     private Button mMapButton;
     private List<Address> mAddresses;
@@ -138,16 +139,21 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
 
         if (requestCode == PLACE_AUTOCOMPLETE_REQUEST_CODE) {
+
             if (resultCode == getActivity().RESULT_OK) {
                 Place place = PlaceAutocomplete.getPlace(getActivity(), data);
 
                 Log.i(TAG, "Place: " + place.getAddress());
 
-                Address address = new Address(place.getAddress().toString());
+                mSelectedAddress = null;
 
-                AddressLab.get(getActivity()).addAddress(address);
+                mSelectedAddress = new Address(place.getAddress().toString());
 
-                AddressLab.get(getActivity()).saveAddress();
+                TypeTitleDialog typeTitleDialog = new TypeTitleDialog();
+                typeTitleDialog.setTargetFragment(AddressesListFragment.this,
+                    GET_TITLE);
+
+                typeTitleDialog.show(getFragmentManager(), TypeTitleDialog.TYPED_TITLE_STRING);
 
             } else if (resultCode == PlaceAutocomplete.RESULT_ERROR) {
                 Status status = PlaceAutocomplete.getStatus(getActivity(), data);
@@ -157,6 +163,13 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
             } else {
                 // The user canceled the operation.
             }
+        } else if (requestCode == GET_TITLE) {
+
+            mSelectedAddress.setTitle(data.getStringExtra(TypeTitleDialog.TYPED_TITLE_STRING));
+
+            AddressLab.get(getActivity()).addAddress(mSelectedAddress);
+
+            AddressLab.get(getActivity()).saveAddress();
         }
     }
 

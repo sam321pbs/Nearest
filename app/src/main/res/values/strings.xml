@@ -17,4 +17,6 @@
     <string name="json_duration">duration</string>
     <string name="json_text">text</string>
     <string name="json_distance">distance</string>
+    <string name="title">Title</string>
+    <string name="type_a_title_for_the_address_here">Type a title for the address here</string>
 </resources>
