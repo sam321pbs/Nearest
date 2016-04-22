@@ -15,6 +15,7 @@ import android.content.Context;
 import android.location.Geocoder;
 import android.location.Location;
 import android.util.Log;
+import android.widget.TextView;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -33,15 +34,128 @@ public class SetUpCommuteInfoForAddresses {
     private Geocoder mGeoCoder;
     private Context mAppContext;
     private Location mCurrentLocation;
+    private Address mSingleAddress;
 
     public SetUpCommuteInfoForAddresses (Context appContext, Location currentLocation){
 
         mCurrentLocation = currentLocation;
         mAppContext = appContext;
-        mAddresses = new ArrayList<>();
         mAddresses = AddressLab.get(appContext).getmAddressBook();
         mUrlForMaps = AddressLab.get(appContext).createAddressUrl();
         mGeoCoder = new Geocoder(appContext, Locale.getDefault());
+    }
+
+//    private void getGoogleJsonResponse(String url) throws NullPointerException{
+//
+//        if (mAddresses != null) {
+//            try {
+//                URL googlePlaces =
+//                    new URL("https://maps.googleapis.com/maps/api/distancematrix/json?" +
+//                        "origins=" + getAddressOfCurrentLocation() +
+//                        "&destinations=" + URLEncoder.encode(url, "UTF-8").replaceAll("\\+", "%20") +
+//                        "&units=imperial&types=geocode&language=en&sensor=true&key=" +
+//                        //Todo: Remove key
+//                        "AIzaSyCjZEowtt-LIAMjX9ghcVHWJ1nVc7V6DbE");
+//
+//                Log.i(TAG, googlePlaces + "");
+//
+//                OkHttpClient client = new OkHttpClient();
+//
+//                Request request = new Request.Builder()
+//                    .url(googlePlaces)
+//                    .build();
+//
+//                Call call = client.newCall(request);
+//                call.enqueue(new Callback() {
+//                    @Override
+//                    public void onFailure(Request request, IOException e) {
+//
+//                        Log.i(TAG, "failed getting data");
+//                        Log.i(TAG, e.getMessage());
+//
+//                    }
+//
+//                    @Override
+//                    public void onResponse(Response response) throws IOException {
+//                        Log.i("Pop up", response.isSuccessful() + "");
+//                    }
+//                });
+//
+//            } catch (MalformedURLException e) {
+//                e.printStackTrace();
+//            } catch (UnsupportedEncodingException e) {
+//
+//            }
+//        } else {
+//            Log.i(TAG, "its null");
+//        }
+//    }
+
+    public void getTravelInfoSingleAddress(Address address, final TextView distance, final TextView eta) {
+        mSingleAddress = new Address(address.getFullAddress());
+
+        if (mAddresses != null) {
+            try {
+                URL googlePlaces =
+                    new URL("https://maps.googleapis.com/maps/api/distancematrix/json?" +
+                        "origins=" + getAddressOfCurrentLocation() +
+                        "&destinations=" + URLEncoder.
+                        encode(AddressLab.createSingleAddressUrl(address), "UTF-8").replaceAll("\\+", "%20") +
+                        "&units=imperial&types=geocode&language=en&sensor=true&key=" +
+                        //Todo: Remove key
+                        "AIzaSyCjZEowtt-LIAMjX9ghcVHWJ1nVc7V6DbE");
+
+                Log.i(TAG, googlePlaces + "");
+
+                OkHttpClient client = new OkHttpClient();
+
+                Request request = new Request.Builder()
+                    .url(googlePlaces)
+                    .build();
+
+                Call call = client.newCall(request);
+                call.enqueue(new Callback() {
+                    @Override
+                    public void onFailure(Request request, IOException e) {
+
+                        Log.i(TAG, "failed getting data");
+                        Log.i(TAG, e.getMessage());
+
+                    }
+
+                    @Override
+                    public void onResponse(Response response) throws IOException {
+                        Log.i("Pop up", response.isSuccessful() + "");
+
+                        try {
+                            String jsonData = response.body().string();
+                            if (response.isSuccessful()) {
+                                Log.i("Pop up", "Google respose");
+                                List<String> destinationTimes = getDurationOfCommutes(jsonData, mAppContext);
+                                List<String> destinationDistances = getDistanceOfCommutes(jsonData, mAppContext);
+                                for (int i = 0; i < destinationTimes.size(); i++) {
+                                    Log.i("Pop up", "eta time = " + destinationTimes.get(i));
+                                    Log.i("Pop up", "dist = " + destinationDistances.get(i));
+                                    eta.setText(destinationTimes.get(i));
+                                    distance.setText(destinationDistances.get(i));
+                                    break;
+                                }
+                            }
+                        } catch (Exception e) {
+                            Log.i(TAG, "Failed " + e.getMessage());
+//            Toast.makeText(mAppContext, "Error getting data", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
+
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+            } catch (UnsupportedEncodingException e) {
+
+            }
+        } else {
+            Log.i(TAG, "its null");
+        }
     }
 
     public void setUpTravelInfo() {
@@ -78,8 +192,8 @@ public class SetUpCommuteInfoForAddresses {
                         try {
                             String jsonData = response.body().string();
                             if (response.isSuccessful()) {
-                                List<String> destinationTimes = getDurationOfCommutes(jsonData);
-                                List<String> destinationDistances = getDistanceOfCommutes(jsonData);
+                                List<String> destinationTimes = getDurationOfCommutes(jsonData, mAppContext);
+                                List<String> destinationDistances = getDistanceOfCommutes(jsonData, mAppContext);
                                 for (int i = 0; i < destinationTimes.size(); i++) {
                                     mAddresses.get(i).setDuration(destinationTimes.get(i));
                                     mAddresses.get(i).setDistance(destinationDistances.get(i));
@@ -101,54 +215,54 @@ public class SetUpCommuteInfoForAddresses {
         }
     }
 
-    private JSONArray getFromJSONArray (String jsonData) throws JSONException{
+    public static JSONArray getFromJSONArray (String jsonData, Context appContext) throws JSONException{
         JSONObject jsonObject = new JSONObject(jsonData);
 
-        JSONArray row = jsonObject.getJSONArray(mAppContext.getString(R.string.json_row));
+        JSONArray row = jsonObject.getJSONArray(appContext.getString(R.string.json_row));
         JSONObject object = row.getJSONObject(0);
-        JSONArray elements = object.getJSONArray(mAppContext.getString(R.string.json_element));
+        JSONArray elements = object.getJSONArray(appContext.getString(R.string.json_element));
 
         return elements;
     }
 
-    private List<String> getDurationOfCommutes(String jsonData) throws JSONException {
+    public static List<String> getDurationOfCommutes(String jsonData, Context appContext) throws JSONException {
 
         List<String> destinationTimes = new ArrayList<>();
 
-        JSONArray elements = getFromJSONArray(jsonData);
+        JSONArray elements = getFromJSONArray(jsonData, appContext);
 
         for (int i = 0; i < elements.length(); i++) {
 
             JSONObject elementsData = elements.getJSONObject(i);
 
-            JSONObject trueDuration = elementsData.getJSONObject(mAppContext.getString(R.string.json_duration));
+            JSONObject trueDuration = elementsData.getJSONObject(appContext.getString(R.string.json_duration));
 
-            destinationTimes.add(trueDuration.getString(mAppContext.getString(R.string.json_text)));
+            destinationTimes.add(trueDuration.getString(appContext.getString(R.string.json_text)));
         }
 
         return destinationTimes;
     }
 
-    private ArrayList<String> getDistanceOfCommutes(String jsonData) throws JSONException {
+    public static ArrayList<String> getDistanceOfCommutes(String jsonData, Context appContext) throws JSONException {
 
         ArrayList<String> destinationDistance = new ArrayList<>();
 
-        JSONArray elements = getFromJSONArray(jsonData);
+        JSONArray elements = getFromJSONArray(jsonData, appContext);
 
         for (int i = 0; i < elements.length(); i++) {
 
             JSONObject elementsData = elements.getJSONObject(i);
 
             JSONObject trueDuration = elementsData.getJSONObject(
-                mAppContext.getString(R.string.json_distance));
+                appContext.getString(R.string.json_distance));
 
-            destinationDistance.add(trueDuration.getString(mAppContext.getString(R.string.json_text)));
+            destinationDistance.add(trueDuration.getString(appContext.getString(R.string.json_text)));
         }
 
         return destinationDistance;
     }
 
-    private String getAddressOfCurrentLocation() {
+    public String getAddressOfCurrentLocation() {
 
         double longitude = mCurrentLocation.getLongitude();
         double latitude = mCurrentLocation.getLatitude();

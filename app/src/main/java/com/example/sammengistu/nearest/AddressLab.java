@@ -31,10 +31,10 @@ public class AddressLab {
         } catch (Exception e) {
             Log.e(TAG, "Error loading todos: ", e);
         }
-}
+    }
 
     public static AddressLab get(Context c) {
-        if (sAddressLab == null){
+        if (sAddressLab == null) {
             sAddressLab = new AddressLab(c.getApplicationContext());
         }
         return sAddressLab;
@@ -46,7 +46,7 @@ public class AddressLab {
 
     public Address getAddress(UUID id) {
         for (Address a : mAddressBook) {
-            if (a.getmId().equals(id)){
+            if (a.getmId().equals(id)) {
                 return a;
             }
         }
@@ -57,9 +57,19 @@ public class AddressLab {
 
         String url = "";
         for (Address address : mAddressBook) {
-                url += (address.getGoogleFormattedAddress());
-                url += ("|");
-            }
+            url += (address.getGoogleFormattedAddress());
+            url += ("|");
+        }
+        return (url.length() == 0 ? "" : url.substring(0, url.length() - 1));
+    }
+
+    public static String createSingleAddressUrl(Address address) {
+
+        String url = "";
+
+        url += (address.getGoogleFormattedAddress());
+        url += ("|");
+
         return (url.length() == 0 ? "" : url.substring(0, url.length() - 1));
     }
 
@@ -71,12 +81,12 @@ public class AddressLab {
         mAddressBook.remove(address);
     }
 
-    public boolean saveAddress(){
+    public boolean saveAddress() {
         try {
             mSerializer.saveAddress(mAddressBook);
             Log.i(TAG, "crimes saved to file");
             return true;
-        } catch (Exception e){
+        } catch (Exception e) {
             Log.i(TAG, "Error sacing crimes: " + e);
             return false;
         }

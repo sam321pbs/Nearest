@@ -267,5 +267,4 @@ public class MapsActivity extends FragmentActivity implements
             ((MapListAdapter) mCommuteInfoListView.getAdapter()).notifyDataSetChanged();
         }
     }
-
 }

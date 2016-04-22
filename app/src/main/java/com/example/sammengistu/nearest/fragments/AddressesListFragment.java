@@ -1,8 +1,11 @@
 package com.example.sammengistu.nearest.fragments;
 
+import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Status;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.places.AutocompleteFilter;
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocomplete;
@@ -10,14 +13,26 @@ import com.google.android.gms.location.places.ui.PlaceAutocomplete;
 import com.example.sammengistu.nearest.AddressLab;
 import com.example.sammengistu.nearest.CheckNetwork;
 import com.example.sammengistu.nearest.R;
+import com.example.sammengistu.nearest.SetUpCommuteInfoForAddresses;
 import com.example.sammengistu.nearest.activities.MapsActivity;
 import com.example.sammengistu.nearest.adapters.AddressAdapter;
 import com.example.sammengistu.nearest.dialogs.PopUpMapDialog;
 import com.example.sammengistu.nearest.dialogs.TypeTitleDialog;
 import com.example.sammengistu.nearest.models.Address;
+import com.squareup.okhttp.Call;
+import com.squareup.okhttp.Callback;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.Response;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -33,9 +48,15 @@ import android.widget.Button;
 import android.widget.ListAdapter;
 import android.widget.Toast;
 
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLEncoder;
 import java.util.List;
 
-public class AddressesListFragment extends Fragment implements AbsListView.OnItemClickListener {
+public class AddressesListFragment extends Fragment implements AbsListView.OnItemClickListener,
+    GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     private static final String TAG = "AddressListFragment";
     private int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
@@ -47,6 +68,8 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
     private AbsListView mListView;
     private ListAdapter mAdapter;
     private Address mSelectedAddress;
+    private GoogleApiClient mGoogleApiClient;
+    private SetUpCommuteInfoForAddresses mSetUpCommuteInfoForAddresses;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -56,6 +79,14 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
         mAddresses = AddressLab.get(getActivity()).getmAddressBook();
 
         mAdapter = new AddressAdapter(getActivity(), mAddresses);
+
+        mGoogleApiClient = new GoogleApiClient.Builder(getActivity())
+            .addConnectionCallbacks(AddressesListFragment.this)
+            .addOnConnectionFailedListener(this)
+            .addApi(LocationServices.API)
+            .build();
+
+        mGoogleApiClient.connect();
 
     }
 
@@ -83,7 +114,7 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
                     startActivity(i);
                 } else {
                     Toast.makeText(getActivity(), "Please Check Network Connection",
-                            Toast.LENGTH_SHORT).show();
+                        Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -95,15 +126,25 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Address address = ((AddressAdapter) mListView.getAdapter()).getItem(position);
 
-        Log.i(TAG, address.isShowOnMap() + "");
+        Log.i(TAG, position + "");
+
+//        for (Address address1: mAddresses){
+//            Log.i(TAG, address1.getFullAddress() + "");
+//        }
 
 //        Intent i = new Intent(getActivity(), AddressActivity.class);
 //        i.putExtra(AddressFragment.ADDRESS_ID, address.getmId());
 //        i.putExtra(AddressFragment.ADDRESS_SHOW_ON_MAP, address.isShowOnMap());
 //        startActivity(i);
 
-        PopUpMapDialog popUpMapDialog = PopUpMapDialog.newInstance(address.getFullAddress());
-        popUpMapDialog.show(getFragmentManager(), "Pop up map");
+//        PopUpMapDialog popUpMapDialog = PopUpMapDialog.newInstance(address.getFullAddress(), address.getTitle());
+//        popUpMapDialog.show(getFragmentManager(), "Pop up map");
+
+        mSetUpCommuteInfoForAddresses = new SetUpCommuteInfoForAddresses(getActivity(),
+            getLastKnownLocation());
+
+
+        getTravelInfoSingleAddress(address);
     }
 
 
@@ -213,5 +254,106 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
         super.onResume();
         ((AddressAdapter) mListView.getAdapter()).notifyDataSetChanged();
         mAddresses = AddressLab.get(getActivity()).getmAddressBook();
+    }
+
+    public Location getLastKnownLocation() {
+
+        if (ActivityCompat.checkSelfPermission(getActivity()
+            , Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(getActivity(), Manifest.permission.ACCESS_COARSE_LOCATION) !=
+                PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return null;
+        }
+        Location location = LocationServices.FusedLocationApi.getLastLocation(
+            mGoogleApiClient);
+
+        return location;
+    }
+
+    public void getTravelInfoSingleAddress(final Address address) {
+
+        try {
+            URL googlePlaces =
+                new URL("https://maps.googleapis.com/maps/api/distancematrix/json?" +
+                    "origins=" + mSetUpCommuteInfoForAddresses.
+                    getAddressOfCurrentLocation() +
+                    "&destinations=" + URLEncoder.encode(AddressLab.createSingleAddressUrl(address),
+                    "UTF-8").replaceAll("\\+", "%20") +
+                    "&units=imperial&types=geocode&language=en&sensor=true&key=" +
+                    //Api key
+                    );
+
+            Log.i(TAG, googlePlaces + "");
+
+            OkHttpClient client = new OkHttpClient();
+
+            Request request = new Request.Builder()
+                .url(googlePlaces)
+                .build();
+
+            Call call = client.newCall(request);
+            call.enqueue(new Callback() {
+                @Override
+                public void onFailure(Request request, IOException e) {
+
+                    Log.i(TAG, "failed getting data");
+                    Log.i(TAG, e.getMessage());
+                }
+
+                @Override
+                public void onResponse(Response response) throws IOException {
+
+                    try {
+                        String jsonData = response.body().string();
+                        if (response.isSuccessful()) {
+
+                            final List<String> destinationTimes =
+                                SetUpCommuteInfoForAddresses.getDurationOfCommutes(jsonData, getActivity());
+                            final List<String> destinationDistances =
+                                SetUpCommuteInfoForAddresses.getDistanceOfCommutes(jsonData, getActivity());
+
+                            PopUpMapDialog popUpMapDialog = PopUpMapDialog.newInstance(
+                                address.getFullAddress(),
+                                destinationDistances.get(0),
+                                destinationTimes.get(0), address.getTitle());
+
+                            popUpMapDialog.show(getFragmentManager(), "Pop up map");
+
+
+                        }
+                    } catch (Exception e) {
+                        Log.i(TAG, "Failed " + e.getMessage());
+//            Toast.makeText(mAppContext, "Error getting data", Toast.LENGTH_LONG).show();
+                    }
+                }
+            });
+
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+
+        }
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
     }
 }

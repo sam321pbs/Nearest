@@ -1,19 +1,6 @@
 package com.example.sammengistu.nearest.dialogs;
 
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.content.DialogInterface;
-import android.content.Intent;
-import android.location.Address;
-import android.location.Geocoder;
-import android.net.Uri;
-import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.DialogFragment;
-import android.view.View;
-import android.widget.Toast;
-
-import com.example.sammengistu.nearest.R;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
@@ -21,37 +8,69 @@ import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import com.example.sammengistu.nearest.R;
+import com.example.sammengistu.nearest.SetUpCommuteInfoForAddresses;
+
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.location.Geocoder;
+import android.net.Uri;
+import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.v4.app.DialogFragment;
+import android.util.Log;
+import android.view.View;
+import android.widget.TextView;
+import android.widget.Toast;
+
 import java.io.IOException;
 import java.util.List;
 
-/**
- * Created by SamMengistu on 10/5/15.
- */
 public class PopUpMapDialog extends DialogFragment {
 
     private static final String ADDRESS_TO_SHOW_ON_MAP = "Address for map";
+    private static final String TAG = "Pop Up";
+    private static final String ADDRESS_TITLE = "Address title";
+    private static final String ADDRESS_DISTANCE = "distance";
+    private static final String ADDRESS_ETA = "eta";
     private GoogleMap mGoogleMap;
     public static final String SHOW_LOCATION = "Show Location";
     MapView mMapView;
-    List<Address> geocodeMatches;
+    List<android.location.Address> geocodeMatches;
+    private GoogleApiClient mGoogleApiClient;
+
+    private TextView mETATextView;
+    private TextView mDistanceTextView;
+    private SetUpCommuteInfoForAddresses mSetUpCommuteInfoForAddresses;
+    private String address;
 
     @NonNull
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
 
         View v = getActivity().
-                getLayoutInflater()
-                .inflate(R.layout.fragment_location_info, null);
-
-        //Todo: Retrieve address from list
-        final String address = getArguments().getString(ADDRESS_TO_SHOW_ON_MAP);
-
-        geocodeMatches = null;
+            getLayoutInflater()
+            .inflate(R.layout.fragment_location_info, null);
 
         mMapView = (MapView) v.findViewById(R.id.mapView);
         mMapView.onCreate(savedInstanceState);
 
         mMapView.onResume();// needed to get the map to display immediately
+
+        address = getArguments().getString(ADDRESS_TO_SHOW_ON_MAP);
+
+        TextView title = ((TextView) v.findViewById(R.id.fragment_location_pop_title_of_location));
+        title.setText(getArguments().get(ADDRESS_TITLE).toString());
+
+        mETATextView = (TextView) v.findViewById(R.id.pop_up_eta_view);
+        mDistanceTextView = (TextView) v.findViewById(R.id.pop_up_distance_view_);
+
+        mETATextView.setText(getArguments().getString(ADDRESS_ETA));
+        mDistanceTextView.setText(getArguments().getString(ADDRESS_DISTANCE));
+
+        geocodeMatches = null;
 
         try {
             MapsInitializer.initialize(getActivity().getApplicationContext());
@@ -60,8 +79,6 @@ public class PopUpMapDialog extends DialogFragment {
         }
 
         mGoogleMap = mMapView.getMap();
-
-        mGoogleMap.setMyLocationEnabled(true);
 
         showAddressOnMap(address);
 
@@ -79,7 +96,6 @@ public class PopUpMapDialog extends DialogFragment {
         AlertDialog alertDialog = builder.create();
 
         alertDialog.show();
-        alertDialog.getWindow().setLayout(600, 700);
 
         return alertDialog;
     }
@@ -90,8 +106,8 @@ public class PopUpMapDialog extends DialogFragment {
 
         try {
             geocodeMatches =
-                    new Geocoder(getActivity()).getFromLocationName(
-                            address, 1);
+                new Geocoder(getActivity()).getFromLocationName(
+                    address, 1);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -102,8 +118,8 @@ public class PopUpMapDialog extends DialogFragment {
 
             // Changing marker icon
             mGoogleMap.addMarker(
-                    new MarkerOptions().position(new LatLng(latitude, longitude))
-                            .visible(true));
+                new MarkerOptions().position(new LatLng(latitude, longitude))
+                    .visible(true));
 
             mGoogleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(latitude, longitude), 15));
         }
@@ -118,18 +134,20 @@ public class PopUpMapDialog extends DialogFragment {
             startActivity(mapIntent);
         } else {
             Toast.makeText(getActivity(), "Please download google maps",
-                    Toast.LENGTH_SHORT).show();
+                Toast.LENGTH_SHORT).show();
         }
     }
 
-    public static PopUpMapDialog newInstance (String address){
+    public static PopUpMapDialog newInstance(String address, String distance, String eta, String addressTitle) {
         Bundle bundle = new Bundle();
         bundle.putString(ADDRESS_TO_SHOW_ON_MAP, address);
+        bundle.putString(ADDRESS_TITLE, addressTitle);
+        bundle.putString(ADDRESS_DISTANCE, distance);
+        bundle.putString(ADDRESS_ETA, eta);
 
         PopUpMapDialog popUpMapDialog = new PopUpMapDialog();
         popUpMapDialog.setArguments(bundle);
 
         return popUpMapDialog;
     }
-
 }

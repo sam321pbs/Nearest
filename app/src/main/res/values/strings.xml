@@ -19,4 +19,6 @@
     <string name="json_distance">distance</string>
     <string name="title">Title</string>
     <string name="type_a_title_for_the_address_here">Type a title for the address here</string>
+    <string name="distance">Dist.</string>
+    <string name="eta">ETA</string>
 </resources>
