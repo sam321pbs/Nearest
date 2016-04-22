@@ -15,7 +15,7 @@ import android.content.Context;
 import android.location.Geocoder;
 import android.location.Location;
 import android.util.Log;
-import android.widget.TextView;
+import android.widget.ArrayAdapter;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -34,7 +34,6 @@ public class SetUpCommuteInfoForAddresses {
     private Geocoder mGeoCoder;
     private Context mAppContext;
     private Location mCurrentLocation;
-    private Address mSingleAddress;
 
     public SetUpCommuteInfoForAddresses (Context appContext, Location currentLocation){
 
@@ -45,120 +44,7 @@ public class SetUpCommuteInfoForAddresses {
         mGeoCoder = new Geocoder(appContext, Locale.getDefault());
     }
 
-//    private void getGoogleJsonResponse(String url) throws NullPointerException{
-//
-//        if (mAddresses != null) {
-//            try {
-//                URL googlePlaces =
-//                    new URL("https://maps.googleapis.com/maps/api/distancematrix/json?" +
-//                        "origins=" + getAddressOfCurrentLocation() +
-//                        "&destinations=" + URLEncoder.encode(url, "UTF-8").replaceAll("\\+", "%20") +
-//                        "&units=imperial&types=geocode&language=en&sensor=true&key=" +
-//                        //Todo: Remove key
-//                        "AIzaSyCjZEowtt-LIAMjX9ghcVHWJ1nVc7V6DbE");
-//
-//                Log.i(TAG, googlePlaces + "");
-//
-//                OkHttpClient client = new OkHttpClient();
-//
-//                Request request = new Request.Builder()
-//                    .url(googlePlaces)
-//                    .build();
-//
-//                Call call = client.newCall(request);
-//                call.enqueue(new Callback() {
-//                    @Override
-//                    public void onFailure(Request request, IOException e) {
-//
-//                        Log.i(TAG, "failed getting data");
-//                        Log.i(TAG, e.getMessage());
-//
-//                    }
-//
-//                    @Override
-//                    public void onResponse(Response response) throws IOException {
-//                        Log.i("Pop up", response.isSuccessful() + "");
-//                    }
-//                });
-//
-//            } catch (MalformedURLException e) {
-//                e.printStackTrace();
-//            } catch (UnsupportedEncodingException e) {
-//
-//            }
-//        } else {
-//            Log.i(TAG, "its null");
-//        }
-//    }
-
-    public void getTravelInfoSingleAddress(Address address, final TextView distance, final TextView eta) {
-        mSingleAddress = new Address(address.getFullAddress());
-
-        if (mAddresses != null) {
-            try {
-                URL googlePlaces =
-                    new URL("https://maps.googleapis.com/maps/api/distancematrix/json?" +
-                        "origins=" + getAddressOfCurrentLocation() +
-                        "&destinations=" + URLEncoder.
-                        encode(AddressLab.createSingleAddressUrl(address), "UTF-8").replaceAll("\\+", "%20") +
-                        "&units=imperial&types=geocode&language=en&sensor=true&key=" +
-                        //Todo: Remove key
-                        "AIzaSyCjZEowtt-LIAMjX9ghcVHWJ1nVc7V6DbE");
-
-                Log.i(TAG, googlePlaces + "");
-
-                OkHttpClient client = new OkHttpClient();
-
-                Request request = new Request.Builder()
-                    .url(googlePlaces)
-                    .build();
-
-                Call call = client.newCall(request);
-                call.enqueue(new Callback() {
-                    @Override
-                    public void onFailure(Request request, IOException e) {
-
-                        Log.i(TAG, "failed getting data");
-                        Log.i(TAG, e.getMessage());
-
-                    }
-
-                    @Override
-                    public void onResponse(Response response) throws IOException {
-                        Log.i("Pop up", response.isSuccessful() + "");
-
-                        try {
-                            String jsonData = response.body().string();
-                            if (response.isSuccessful()) {
-                                Log.i("Pop up", "Google respose");
-                                List<String> destinationTimes = getDurationOfCommutes(jsonData, mAppContext);
-                                List<String> destinationDistances = getDistanceOfCommutes(jsonData, mAppContext);
-                                for (int i = 0; i < destinationTimes.size(); i++) {
-                                    Log.i("Pop up", "eta time = " + destinationTimes.get(i));
-                                    Log.i("Pop up", "dist = " + destinationDistances.get(i));
-                                    eta.setText(destinationTimes.get(i));
-                                    distance.setText(destinationDistances.get(i));
-                                    break;
-                                }
-                            }
-                        } catch (Exception e) {
-                            Log.i(TAG, "Failed " + e.getMessage());
-//            Toast.makeText(mAppContext, "Error getting data", Toast.LENGTH_LONG).show();
-                        }
-                    }
-                });
-
-            } catch (MalformedURLException e) {
-                e.printStackTrace();
-            } catch (UnsupportedEncodingException e) {
-
-            }
-        } else {
-            Log.i(TAG, "its null");
-        }
-    }
-
-    public void setUpTravelInfo() {
+    public void setUpTravelInfo(final ArrayAdapter<Address> addressArrayAdapter) {
         if (mAddresses != null) {
             try {
                 URL googlePlaces =
@@ -167,7 +53,7 @@ public class SetUpCommuteInfoForAddresses {
                                 "&destinations=" + URLEncoder.encode(mUrlForMaps, "UTF-8").replaceAll("\\+", "%20") +
                                 "&units=imperial&types=geocode&language=en&sensor=true&key=" +
                             //Todo: Remove key
-                            "AIzaSyCjZEowtt-LIAMjX9ghcVHWJ1nVc7V6DbE");
+                            mAppContext.getString(R.string.api_key_url));
 
                 Log.i(TAG, googlePlaces + "");
 
@@ -198,6 +84,7 @@ public class SetUpCommuteInfoForAddresses {
                                     mAddresses.get(i).setDuration(destinationTimes.get(i));
                                     mAddresses.get(i).setDistance(destinationDistances.get(i));
                                 }
+                                addressArrayAdapter.notifyDataSetChanged();
                             }
                         } catch (Exception e) {
                             Log.i(TAG, "Failed " + e.getMessage());

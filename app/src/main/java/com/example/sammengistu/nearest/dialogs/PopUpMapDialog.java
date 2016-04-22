@@ -1,6 +1,5 @@
 package com.example.sammengistu.nearest.dialogs;
 
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
@@ -9,7 +8,6 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import com.example.sammengistu.nearest.R;
-import com.example.sammengistu.nearest.SetUpCommuteInfoForAddresses;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -20,7 +18,6 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -36,14 +33,12 @@ public class PopUpMapDialog extends DialogFragment {
     private static final String ADDRESS_DISTANCE = "distance";
     private static final String ADDRESS_ETA = "eta";
     private GoogleMap mGoogleMap;
-    public static final String SHOW_LOCATION = "Show Location";
+
     MapView mMapView;
     List<android.location.Address> geocodeMatches;
-    private GoogleApiClient mGoogleApiClient;
 
     private TextView mETATextView;
     private TextView mDistanceTextView;
-    private SetUpCommuteInfoForAddresses mSetUpCommuteInfoForAddresses;
     private String address;
 
     @NonNull

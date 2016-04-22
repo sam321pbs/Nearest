@@ -35,7 +35,7 @@ public class LoadCommuteInfoTask extends AsyncTask<Void, Void, Void> {
         SetUpCommuteInfoForAddresses setUpCommuteInfoForAddresses =
             new SetUpCommuteInfoForAddresses(mAppContext, mCurrentLocation);
 
-        setUpCommuteInfoForAddresses.setUpTravelInfo();
+//        setUpCommuteInfoForAddresses.setUpTravelInfo();
 
         return null;
     }

@@ -214,8 +214,11 @@ public class MapsActivity extends FragmentActivity implements
 
         if (mLastLocation != null) {
             zoomOnMyLocation();
-            new LoadCommuteInfoTaskk(this, mCommuteInfoListView,  mLastLocation,
-                mAddressesToShowOnMap, mMap).execute();
+            SetUpCommuteInfoForAddresses setUpCommuteInfoForAddresses =
+                new SetUpCommuteInfoForAddresses(MapsActivity.this, mLastLocation);
+
+            setUpCommuteInfoForAddresses.setUpTravelInfo(
+                ((MapListAdapter) mCommuteInfoListView.getAdapter()));
         } else {
             Log.i(TAG, "last location = null");
         }
@@ -254,7 +257,7 @@ public class MapsActivity extends FragmentActivity implements
             SetUpCommuteInfoForAddresses setUpCommuteInfoForAddresses =
                 new SetUpCommuteInfoForAddresses(mAppContext, mCurrentLocation);
 
-            setUpCommuteInfoForAddresses.setUpTravelInfo();
+//            setUpCommuteInfoForAddresses.setUpTravelInfo();
 
             return null;
         }

@@ -126,20 +126,6 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Address address = ((AddressAdapter) mListView.getAdapter()).getItem(position);
 
-        Log.i(TAG, position + "");
-
-//        for (Address address1: mAddresses){
-//            Log.i(TAG, address1.getFullAddress() + "");
-//        }
-
-//        Intent i = new Intent(getActivity(), AddressActivity.class);
-//        i.putExtra(AddressFragment.ADDRESS_ID, address.getmId());
-//        i.putExtra(AddressFragment.ADDRESS_SHOW_ON_MAP, address.isShowOnMap());
-//        startActivity(i);
-
-//        PopUpMapDialog popUpMapDialog = PopUpMapDialog.newInstance(address.getFullAddress(), address.getTitle());
-//        popUpMapDialog.show(getFragmentManager(), "Pop up map");
-
         mSetUpCommuteInfoForAddresses = new SetUpCommuteInfoForAddresses(getActivity(),
             getLastKnownLocation());
 
@@ -288,7 +274,7 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
                     "UTF-8").replaceAll("\\+", "%20") +
                     "&units=imperial&types=geocode&language=en&sensor=true&key=" +
                     //Api key
-                    );
+                    getString(R.string.api_key_url));
 
             Log.i(TAG, googlePlaces + "");
 
