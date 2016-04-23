@@ -210,7 +210,7 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-        getActivity().getMenuInflater().inflate(R.menu.address_list_item_context, menu);
+        getActivity().getMenuInflater().inflate(R.menu.menu_addresses, menu);
     }
 
     @Override
@@ -342,4 +342,36 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
     }
+
+//    @Override
+//    public boolean onMenuItemClick(MenuItem menuItem) {
+//        switch (menuItem.getItemId()) {
+//            case R.id.action_share:
+//                if (menuItem.getItemId() == R.id.action_share)
+//                    Log.d("debug","action share has clicked");
+//                return true;
+//        }
+//        return false;
+//    }
+
+//    @Override
+//    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+//        super.onCreateOptionsMenu(menu, inflater);
+//        Log.d("debug", "fragment : onCreateOptionsMenu");
+////        MenuItem shareMenuItem = menu.findItem(R.id.action_share);
+////        mShareActionProvider =(ShareActionProvider) MenuItemCompat.getActionProvider(shareMenuItem);
+//    }
+
+//    @Override
+//    public boolean onOptionsItemSelected(MenuItem item) {
+//        switch (item.getItemId()){
+//            case android.R.id.home:
+//                Log.d("debug","fragment : action home has clicked");
+//                return true;
+//            case R.id.action_share:
+//                Log.d("debug","fragment: action share has clicked");
+//                return true;
+//        }
+//        return super.onOptionsItemSelected(item);
+//    }
 }
