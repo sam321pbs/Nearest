@@ -11,9 +11,6 @@ import android.widget.TextView;
 
 import java.util.List;
 
-/**
- * Created by SamMengistu on 4/20/16.
- */
 public class MapListAdapter extends ArrayAdapter<Address> {
 
     private Activity mActivity;

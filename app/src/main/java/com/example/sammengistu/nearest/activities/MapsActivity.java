@@ -10,18 +10,15 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-import com.example.sammengistu.nearest.models.Address;
 import com.example.sammengistu.nearest.AddressLab;
 import com.example.sammengistu.nearest.R;
-import com.example.sammengistu.nearest.SetUpCommuteInfoForAddresses;
 import com.example.sammengistu.nearest.adapters.MapListAdapter;
+import com.example.sammengistu.nearest.models.Address;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.location.Geocoder;
 import android.location.Location;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -47,7 +44,7 @@ public class MapsActivity extends FragmentActivity implements
     private List<Address> mAddressesToShowOnMap = new ArrayList<>();
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
-    private ArrayAdapter<Address> mAdapter;
+    public static ArrayAdapter<Address> mAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -212,16 +209,7 @@ public class MapsActivity extends FragmentActivity implements
         mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
             mGoogleApiClient);
 
-        if (mLastLocation != null) {
-            zoomOnMyLocation();
-            SetUpCommuteInfoForAddresses setUpCommuteInfoForAddresses =
-                new SetUpCommuteInfoForAddresses(MapsActivity.this, mLastLocation);
-
-            setUpCommuteInfoForAddresses.setUpTravelInfo(
-                ((MapListAdapter) mCommuteInfoListView.getAdapter()));
-        } else {
-            Log.i(TAG, "last location = null");
-        }
+        zoomOnMyLocation();
     }
 
     @Override
@@ -234,40 +222,4 @@ public class MapsActivity extends FragmentActivity implements
 
     }
 
-    public class LoadCommuteInfoTaskk extends AsyncTask<Void, Void, Void> {
-
-        private Location mCurrentLocation;
-        private Activity mAppContext;
-        private List<Address> mAddressesToShowOnMap;
-        private ListView mCommuteInfoListView;
-        private GoogleMap mGoogleMap;
-
-        public LoadCommuteInfoTaskk (Activity appContext, ListView listView,
-                                    Location currentLocation, List<Address> addressToShowOnMap,
-                                    GoogleMap googleMap){
-
-            mCurrentLocation = currentLocation;
-            mAppContext = appContext;
-            mAddressesToShowOnMap = addressToShowOnMap;
-            mCommuteInfoListView = listView;
-            mGoogleMap = googleMap;
-        }
-        @Override
-        protected Void doInBackground(Void... params) {
-            SetUpCommuteInfoForAddresses setUpCommuteInfoForAddresses =
-                new SetUpCommuteInfoForAddresses(mAppContext, mCurrentLocation);
-
-//            setUpCommuteInfoForAddresses.setUpTravelInfo();
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-
-            //TODO: data not updated
-            //  setUpTravelInfo();
-            ((MapListAdapter) mCommuteInfoListView.getAdapter()).notifyDataSetChanged();
-        }
-    }
 }

@@ -21,7 +21,9 @@
         android:textStyle="bold"
         android:paddingLeft="4dp"
         android:paddingRight="4dp"
+        android:textSize="20sp"
         android:text="Address title"/>
+
     <TextView
         android:id="@+id/list_item_streetTextView"
         android:layout_width="match_parent"

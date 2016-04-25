@@ -110,8 +110,10 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
             public void onClick(View v) {
                 if (CheckNetwork.networkConnection(getActivity())) {
 
-                    Intent i = new Intent(getActivity(), MapsActivity.class);
-                    startActivity(i);
+                    mSetUpCommuteInfoForAddresses = new SetUpCommuteInfoForAddresses(getActivity(),
+                        getLastKnownLocation());
+
+                    mSetUpCommuteInfoForAddresses.setUpTravelInfo(getActivity(), MapsActivity.class);
                 } else {
                     Toast.makeText(getActivity(), "Please Check Network Connection",
                         Toast.LENGTH_SHORT).show();
@@ -210,7 +212,7 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
 
     @Override
     public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-        getActivity().getMenuInflater().inflate(R.menu.menu_addresses, menu);
+        getActivity().getMenuInflater().inflate(R.menu.address_list_item_context, menu);
     }
 
     @Override
@@ -269,7 +271,7 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
             URL googlePlaces =
                 new URL("https://maps.googleapis.com/maps/api/distancematrix/json?" +
                     "origins=" + mSetUpCommuteInfoForAddresses.
-                    getAddressOfCurrentLocation() +
+                    getAddressOfCurrentLocation(getLastKnownLocation()) +
                     "&destinations=" + URLEncoder.encode(AddressLab.createSingleAddressUrl(address),
                     "UTF-8").replaceAll("\\+", "%20") +
                     "&units=imperial&types=geocode&language=en&sensor=true&key=" +
@@ -316,7 +318,6 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
                         }
                     } catch (Exception e) {
                         Log.i(TAG, "Failed " + e.getMessage());
-//            Toast.makeText(mAppContext, "Error getting data", Toast.LENGTH_LONG).show();
                     }
                 }
             });
@@ -342,36 +343,4 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
     }
-
-//    @Override
-//    public boolean onMenuItemClick(MenuItem menuItem) {
-//        switch (menuItem.getItemId()) {
-//            case R.id.action_share:
-//                if (menuItem.getItemId() == R.id.action_share)
-//                    Log.d("debug","action share has clicked");
-//                return true;
-//        }
-//        return false;
-//    }
-
-//    @Override
-//    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-//        super.onCreateOptionsMenu(menu, inflater);
-//        Log.d("debug", "fragment : onCreateOptionsMenu");
-////        MenuItem shareMenuItem = menu.findItem(R.id.action_share);
-////        mShareActionProvider =(ShareActionProvider) MenuItemCompat.getActionProvider(shareMenuItem);
-//    }
-
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        switch (item.getItemId()){
-//            case android.R.id.home:
-//                Log.d("debug","fragment : action home has clicked");
-//                return true;
-//            case R.id.action_share:
-//                Log.d("debug","fragment: action share has clicked");
-//                return true;
-//        }
-//        return super.onOptionsItemSelected(item);
-//    }
 }

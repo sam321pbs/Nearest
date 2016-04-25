@@ -11,11 +11,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.location.Geocoder;
 import android.location.Location;
 import android.util.Log;
-import android.widget.ArrayAdapter;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -31,7 +32,7 @@ public class SetUpCommuteInfoForAddresses {
     private static final String TAG = "SetUpCommute";
     private List<Address> mAddresses;
     private String mUrlForMaps;
-    private Geocoder mGeoCoder;
+    public static Geocoder mGeoCoder;
     private Context mAppContext;
     private Location mCurrentLocation;
 
@@ -44,12 +45,12 @@ public class SetUpCommuteInfoForAddresses {
         mGeoCoder = new Geocoder(appContext, Locale.getDefault());
     }
 
-    public void setUpTravelInfo(final ArrayAdapter<Address> addressArrayAdapter) {
+    public void setUpTravelInfo(final Activity currentActivity, final Class<?> mapClass) {
         if (mAddresses != null) {
             try {
                 URL googlePlaces =
                         new URL("https://maps.googleapis.com/maps/api/distancematrix/json?" +
-                                "origins=" + getAddressOfCurrentLocation() +
+                                "origins=" + getAddressOfCurrentLocation(mCurrentLocation) +
                                 "&destinations=" + URLEncoder.encode(mUrlForMaps, "UTF-8").replaceAll("\\+", "%20") +
                                 "&units=imperial&types=geocode&language=en&sensor=true&key=" +
                             //Todo: Remove key
@@ -84,7 +85,9 @@ public class SetUpCommuteInfoForAddresses {
                                     mAddresses.get(i).setDuration(destinationTimes.get(i));
                                     mAddresses.get(i).setDistance(destinationDistances.get(i));
                                 }
-                                addressArrayAdapter.notifyDataSetChanged();
+
+                                Intent intent = new Intent(currentActivity, mapClass);
+                                currentActivity.startActivity(intent);
                             }
                         } catch (Exception e) {
                             Log.i(TAG, "Failed " + e.getMessage());
@@ -149,10 +152,10 @@ public class SetUpCommuteInfoForAddresses {
         return destinationDistance;
     }
 
-    public String getAddressOfCurrentLocation() {
+    public static String getAddressOfCurrentLocation(Location location) {
 
-        double longitude = mCurrentLocation.getLongitude();
-        double latitude = mCurrentLocation.getLatitude();
+        double longitude = location.getLongitude();
+        double latitude = location.getLatitude();
         String currentLocationAddress = "";
 
 
@@ -180,4 +183,5 @@ public class SetUpCommuteInfoForAddresses {
 
         return currentLocationAddress;
     }
+
 }

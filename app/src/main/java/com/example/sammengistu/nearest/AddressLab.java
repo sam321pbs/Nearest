@@ -15,14 +15,13 @@ public class AddressLab {
     private static final String TAG = "GoalLab";
 
     private List<Address> mAddressBook;
-    private List<Address> mAddressesToShowOnMap;
 
     private static AddressLab sAddressLab;
     private AddressJSONSerializer mSerializer;
 
     public AddressLab(Context appContext) {
 
-        mAddressBook = new ArrayList<Address>();
+        mAddressBook = new ArrayList<>();
 
         mSerializer = new AddressJSONSerializer(appContext, FILENAME);
 
