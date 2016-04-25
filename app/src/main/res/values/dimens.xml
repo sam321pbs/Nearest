@@ -5,4 +5,7 @@
     <dimen name="dialog_info_margin">70dp</dimen>
     <dimen name="address_info_space_to_detail">10dp</dimen>
     <dimen name="highlight_amount">10dp</dimen>
+    <dimen name="title_margin">15dp</dimen>
+    <dimen name="pop_up_map_margin_top">12dp</dimen>
+    <dimen name="pop_up_map_margin_side">15dp</dimen>
 </resources>

@@ -7,7 +7,9 @@ import com.google.android.gms.maps.MapsInitializer;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import com.example.sammengistu.nearest.AddressLab;
 import com.example.sammengistu.nearest.R;
+import com.example.sammengistu.nearest.models.Address;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -18,7 +20,10 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,6 +37,7 @@ public class PopUpMapDialog extends DialogFragment {
     private static final String ADDRESS_TITLE = "Address title";
     private static final String ADDRESS_DISTANCE = "distance";
     private static final String ADDRESS_ETA = "eta";
+    private static final String ADDRESS_ID = "Address ID";
     private GoogleMap mGoogleMap;
 
     MapView mMapView;
@@ -47,7 +53,7 @@ public class PopUpMapDialog extends DialogFragment {
 
         View v = getActivity().
             getLayoutInflater()
-            .inflate(R.layout.fragment_location_info, null);
+            .inflate(R.layout.fragment_location_info_dialog, null);
 
         mMapView = (MapView) v.findViewById(R.id.mapView);
         mMapView.onCreate(savedInstanceState);
@@ -55,9 +61,32 @@ public class PopUpMapDialog extends DialogFragment {
         mMapView.onResume();// needed to get the map to display immediately
 
         address = getArguments().getString(ADDRESS_TO_SHOW_ON_MAP);
+        final String addressId = getArguments().getString(ADDRESS_ID);
 
-        TextView title = ((TextView) v.findViewById(R.id.fragment_location_pop_title_of_location));
+        EditText title = ((EditText) v.findViewById(R.id.fragment_location_pop_title_of_location));
         title.setText(getArguments().get(ADDRESS_TITLE).toString());
+
+        title.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                List<Address> addresses = AddressLab.get(getActivity()).getmAddressBook();
+                for (Address address: addresses){
+                    if (address.getmId().toString().equals(addressId)){
+                        address.setTitle(s.toString());
+                    }
+                }
+            }
+        });
 
         mETATextView = (TextView) v.findViewById(R.id.pop_up_eta_view);
         mDistanceTextView = (TextView) v.findViewById(R.id.pop_up_distance_view_);
@@ -133,12 +162,14 @@ public class PopUpMapDialog extends DialogFragment {
         }
     }
 
-    public static PopUpMapDialog newInstance(String address, String distance, String eta, String addressTitle) {
+    public static PopUpMapDialog newInstance(String address, String distance, String eta,
+                                             String addressTitle, String addressID) {
         Bundle bundle = new Bundle();
         bundle.putString(ADDRESS_TO_SHOW_ON_MAP, address);
         bundle.putString(ADDRESS_TITLE, addressTitle);
         bundle.putString(ADDRESS_DISTANCE, distance);
         bundle.putString(ADDRESS_ETA, eta);
+        bundle.putString(ADDRESS_ID, addressID);
 
         PopUpMapDialog popUpMapDialog = new PopUpMapDialog();
         popUpMapDialog.setArguments(bundle);

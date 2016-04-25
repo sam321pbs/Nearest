@@ -310,7 +310,8 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
                             PopUpMapDialog popUpMapDialog = PopUpMapDialog.newInstance(
                                 address.getFullAddress(),
                                 destinationDistances.get(0),
-                                destinationTimes.get(0), address.getTitle());
+                                destinationTimes.get(0), address.getTitle(),
+                                address.getmId().toString());
 
                             popUpMapDialog.show(getFragmentManager(), "Pop up map");
 
