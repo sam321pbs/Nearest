@@ -1,45 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:layout_margin="@dimen/highlight_amount"
+                android:background="@color/white_color"
+                android:padding="15dp">
 
     <TextView
-        android:id="@+id/list_item_duration_details"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:gravity="center"
-        android:layout_alignParentEnd="true"
-        android:layout_marginEnd="@dimen/activity_horizontal_margin"
-        android:padding="4dp"/>
+            android:id="@+id/list_item_duration_details"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="@dimen/activity_horizontal_margin"
+            android:padding="4dp"/>
 
     <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/list_item_distance_details"
-        android:layout_below="@+id/list_item_duration_details"
-        android:layout_marginEnd="@dimen/activity_horizontal_margin"
-        android:layout_alignParentEnd="true"/>
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/list_item_distance_details"
+            android:layout_below="@+id/list_item_duration_details"
+            android:layout_marginEnd="@dimen/activity_horizontal_margin"
+            android:layout_alignParentEnd="true"/>
 
     <TextView
-        android:id="@+id/list_item_title_of_address"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_toStartOf="@+id/list_item_duration_details"
-        android:layout_marginEnd="@dimen/address_info_space_to_detail"
-        android:textStyle="bold"
-        android:paddingLeft="4dp"
-        android:paddingRight="4dp"
-        android:textSize="20sp"/>
+            android:id="@+id/list_item_title_of_address"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toStartOf="@+id/list_item_duration_details"
+            android:layout_marginEnd="@dimen/address_info_space_to_detail"
+            android:textStyle="bold"
+            android:paddingLeft="4dp"
+            android:paddingRight="4dp"
+            android:textSize="20sp"/>
 
     <TextView
-        android:id="@+id/map_list_item_full_address"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="@dimen/address_info_space_to_detail"
-        android:layout_toStartOf="@+id/list_item_distance_details"
-        android:layout_below="@+id/list_item_title_of_address"
-        android:textStyle="bold"
-        android:paddingLeft="4dp"
-        android:paddingRight="4dp"/>
+            android:id="@+id/map_list_item_full_address"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/address_info_space_to_detail"
+            android:layout_toStartOf="@+id/list_item_distance_details"
+            android:layout_below="@+id/list_item_title_of_address"
+            android:textStyle="bold"
+            android:paddingLeft="4dp"
+            android:paddingRight="4dp"/>
 
 </RelativeLayout>

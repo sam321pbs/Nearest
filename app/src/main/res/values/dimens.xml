@@ -4,4 +4,5 @@
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="dialog_info_margin">70dp</dimen>
     <dimen name="address_info_space_to_detail">10dp</dimen>
+    <dimen name="highlight_amount">10dp</dimen>
 </resources>

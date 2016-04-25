@@ -4,6 +4,7 @@ import com.example.sammengistu.nearest.models.Address;
 import com.example.sammengistu.nearest.R;
 
 import android.app.Activity;
+import android.graphics.Color;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -20,15 +21,24 @@ public class MapListAdapter extends ArrayAdapter<Address> {
         mActivity = appContext;
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public View getView(int postion, View convertView, ViewGroup parent) {
         //If a view wasent given to us
         if (convertView == null) {
             convertView = mActivity.getLayoutInflater()
-                .inflate(R.layout.map_list_item_address, null);
+                .inflate(R.layout.map_list_item, null);
         }
 
         Address addressToShowOnMap = getItem(postion);
+
+        View backgroundView = (View) convertView.findViewById(R.id.map_list_item_background_view);
+
+        if (postion == 0) {
+            backgroundView.setBackgroundColor(Color.YELLOW);
+        } else {
+            backgroundView.setBackgroundColor(mActivity.getResources().getColor(R.color.white_color));
+        }
 
         TextView addressTitleTextView = (TextView)
             convertView.findViewById(R.id.list_item_title_of_address);
