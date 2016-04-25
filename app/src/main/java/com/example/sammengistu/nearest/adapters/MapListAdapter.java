@@ -32,8 +32,8 @@ public class MapListAdapter extends ArrayAdapter<Address> {
 
         TextView addressTitleTextView = (TextView)
             convertView.findViewById(R.id.list_item_title_of_address);
-        TextView streetTextView = (TextView)
-            convertView.findViewById(R.id.list_item_streetTextView);
+        TextView fullAddressTextView = (TextView)
+            convertView.findViewById(R.id.map_list_item_full_address);
         TextView commuteTime = (TextView)
             convertView.findViewById(R.id.list_item_duration_details);
         TextView commuteDistance = (TextView)
@@ -49,6 +49,10 @@ public class MapListAdapter extends ArrayAdapter<Address> {
             commuteDistance.setText(addressToShowOnMap.getDistance());
         } else {
             commuteDistance.setText("0 miles");
+        }
+
+        if (addressToShowOnMap.getFullAddress() != null){
+            fullAddressTextView.setText(addressToShowOnMap.getFullAddress());
         }
 
         addressTitleTextView.setText(addressToShowOnMap.getTitle());

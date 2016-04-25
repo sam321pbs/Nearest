@@ -8,36 +8,38 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:layout_alignParentRight="true"
-        android:padding="4dp"
-        android:text="0 min"/>
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="@dimen/activity_horizontal_margin"
+        android:padding="4dp"/>
+
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/list_item_distance_details"
         android:layout_below="@+id/list_item_duration_details"
-        android:text="1.0 mi"
-        android:layout_alignParentRight="true"/>
+        android:layout_marginEnd="@dimen/activity_horizontal_margin"
+        android:layout_alignParentEnd="true"/>
 
     <TextView
         android:id="@+id/list_item_title_of_address"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_toLeftOf="@+id/list_item_show_on_map"
+        android:layout_toStartOf="@+id/list_item_duration_details"
+        android:layout_marginEnd="@dimen/address_info_space_to_detail"
         android:textStyle="bold"
         android:paddingLeft="4dp"
         android:paddingRight="4dp"
-        android:text="Address title"
         android:textSize="20sp"/>
+
     <TextView
-        android:id="@+id/list_item_streetTextView"
+        android:id="@+id/map_list_item_full_address"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_toLeftOf="@+id/list_item_show_on_map"
+        android:layout_marginEnd="@dimen/address_info_space_to_detail"
+        android:layout_toStartOf="@+id/list_item_distance_details"
         android:layout_below="@+id/list_item_title_of_address"
         android:textStyle="bold"
         android:paddingLeft="4dp"
-        android:paddingRight="4dp"
-        android:text="Address"/>
+        android:paddingRight="4dp"/>
 
 </RelativeLayout>

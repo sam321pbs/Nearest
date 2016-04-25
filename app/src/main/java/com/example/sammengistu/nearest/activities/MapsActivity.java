@@ -46,7 +46,7 @@ public class MapsActivity extends FragmentActivity implements
     private List<Address> mAddressesToShowOnMap = new ArrayList<>();
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
-    public static ArrayAdapter<Address> mAdapter;
+    private ArrayAdapter<Address> mAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -148,7 +148,7 @@ public class MapsActivity extends FragmentActivity implements
     }
 
     private void setUpMap() {
-        Log.i(TAG, "Setting up Map");
+
         for (Address addressToDisplay : AddressLab.get(getApplicationContext()).getmAddressBook()) {
             if (addressToDisplay.isShowOnMap()) {
                 double latitude = 0;
