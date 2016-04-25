@@ -32,6 +32,8 @@ import android.widget.ListView;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 public class MapsActivity extends FragmentActivity implements
@@ -79,6 +81,19 @@ public class MapsActivity extends FragmentActivity implements
 
         List<Address> addresses =
             AddressLab.get(getApplicationContext()).getmAddressBook();
+
+        Collections.sort(addresses, new Comparator<Address>() {
+            @Override
+            public int compare(Address lhs, Address rhs) {
+                String numberFirstAddress = lhs.getDistance().split("\\s")[0];
+                String numberSecondAddress = rhs.getDistance().split("\\s")[0];
+
+                Double doub = Double.parseDouble(numberFirstAddress);
+                Double double2 = Double.parseDouble(numberSecondAddress);
+
+                return doub.compareTo(double2);
+            }
+        });
 
         for (Address a : addresses) {
             if (a.isShowOnMap()) {

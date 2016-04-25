@@ -16,10 +16,6 @@ public class AddressesListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_addresses);
 
-//        CollapsingToolbarLayout toolbarLayout = ((CollapsingToolbarLayout) findViewById(R.id.collapsing_toolBar));
-//        toolbarLayout.setTitle(getResources().getString(R.string.app_name));
-//        toolbarLayout.setBackgroundColor(getResources().getColor(R.color.theme_primary));
-
         Toolbar myToolbar = (Toolbar) findViewById(R.id.toolbar);
         myToolbar.setTitle(getResources().getString(R.string.app_name));
         myToolbar.setBackgroundColor(getResources().getColor(R.color.theme_primary));
