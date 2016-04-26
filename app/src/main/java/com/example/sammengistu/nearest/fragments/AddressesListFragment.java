@@ -11,10 +11,8 @@ import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.ui.PlaceAutocomplete;
 
 import com.example.sammengistu.nearest.AddressLab;
-import com.example.sammengistu.nearest.CheckNetwork;
 import com.example.sammengistu.nearest.R;
 import com.example.sammengistu.nearest.SetUpCommuteInfoForAddresses;
-import com.example.sammengistu.nearest.activities.MapsActivity;
 import com.example.sammengistu.nearest.adapters.AddressAdapter;
 import com.example.sammengistu.nearest.dialogs.PopUpMapDialog;
 import com.example.sammengistu.nearest.dialogs.TypeTitleDialog;
@@ -32,6 +30,7 @@ import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -44,9 +43,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.ListAdapter;
-import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -62,7 +59,6 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
     private int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
     private static final int GET_TITLE = 2;
 
-    private Button mMapButton;
     private List<Address> mAddresses;
 
     private AbsListView mListView;
@@ -70,6 +66,7 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
     private Address mSelectedAddress;
     private GoogleApiClient mGoogleApiClient;
     private SetUpCommuteInfoForAddresses mSetUpCommuteInfoForAddresses;
+    private FloatingActionButton mFloatingActionButtonAddAddress;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -90,6 +87,7 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
 
     }
 
+    @SuppressWarnings("deprecation")
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -103,20 +101,30 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
 
         mListView.setOnItemClickListener(this);
 
-        mMapButton = (Button) v.findViewById(R.id.show_map_button);
+        mFloatingActionButtonAddAddress = (FloatingActionButton) v.findViewById(R.id.fab_add);
 
-        mMapButton.setOnClickListener(new View.OnClickListener() {
+        mFloatingActionButtonAddAddress.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (CheckNetwork.networkConnection(getActivity())) {
+                try {
 
-                    mSetUpCommuteInfoForAddresses = new SetUpCommuteInfoForAddresses(getActivity(),
-                        getLastKnownLocation());
+                    AutocompleteFilter typeFilter = new AutocompleteFilter.Builder()
+                        .setTypeFilter(AutocompleteFilter.TYPE_FILTER_ADDRESS)
+                        .build();
 
-                    mSetUpCommuteInfoForAddresses.setUpTravelInfo(getActivity(), MapsActivity.class);
-                } else {
-                    Toast.makeText(getActivity(), "Please Check Network Connection",
-                        Toast.LENGTH_SHORT).show();
+                    Intent intent =
+                        new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_OVERLAY)
+                            .setFilter(typeFilter)
+                            .build(getActivity());
+
+                    startActivityForResult(intent, PLACE_AUTOCOMPLETE_REQUEST_CODE);
+
+                } catch (GooglePlayServicesRepairableException e) {
+                    // TODO: Handle the error.
+                    Log.i(TAG, e.getMessage());
+                } catch (GooglePlayServicesNotAvailableException e) {
+                    // TODO: Handle the error.
+                    Log.i(TAG, e.getMessage());
                 }
             }
         });
@@ -140,36 +148,6 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.menu_addresses, menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.menu_item_new_Address:
-
-                try {
-
-                    AutocompleteFilter typeFilter = new AutocompleteFilter.Builder()
-                        .setTypeFilter(AutocompleteFilter.TYPE_FILTER_ADDRESS)
-                        .build();
-
-                    Intent intent =
-                        new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_OVERLAY)
-                            .setFilter(typeFilter)
-                            .build(getActivity());
-                    startActivityForResult(intent, PLACE_AUTOCOMPLETE_REQUEST_CODE);
-                } catch (GooglePlayServicesRepairableException e) {
-                    // TODO: Handle the error.
-                    Log.i(TAG, e.getMessage());
-                } catch (GooglePlayServicesNotAvailableException e) {
-                    // TODO: Handle the error.
-                    Log.i(TAG, e.getMessage());
-                }
-                return true;
-
-            default:
-                return super.onOptionsItemSelected(item);
-        }
     }
 
     @Override

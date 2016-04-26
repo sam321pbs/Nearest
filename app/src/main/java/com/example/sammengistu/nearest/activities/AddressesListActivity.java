@@ -1,14 +1,33 @@
 package com.example.sammengistu.nearest.activities;
 
-import com.example.sammengistu.nearest.R;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationServices;
 
+import com.example.sammengistu.nearest.CheckNetwork;
+import com.example.sammengistu.nearest.R;
+import com.example.sammengistu.nearest.SetUpCommuteInfoForAddresses;
+
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.Toast;
 
 
-public class AddressesListActivity extends AppCompatActivity {
+public class AddressesListActivity extends AppCompatActivity implements
+    GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener{
+
+    private SetUpCommuteInfoForAddresses mSetUpCommuteInfoForAddresses;
+    private GoogleApiClient mGoogleApiClient;
 
     @SuppressWarnings("deprecation")
     @Override
@@ -16,16 +35,75 @@ public class AddressesListActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_addresses);
 
+        mGoogleApiClient = new GoogleApiClient.Builder(AddressesListActivity.this)
+            .addConnectionCallbacks(AddressesListActivity.this)
+            .addOnConnectionFailedListener(this)
+            .addApi(LocationServices.API)
+            .build();
+
+        mGoogleApiClient.connect();
+
         Toolbar myToolbar = (Toolbar) findViewById(R.id.toolbar);
-        myToolbar.setTitle(getResources().getString(R.string.app_name));
         myToolbar.setBackgroundColor(getResources().getColor(R.color.theme_primary));
         setSupportActionBar(myToolbar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
 
+        ImageView mapIcon = (ImageView) findViewById(R.id.show_map_icon);
+        mapIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (CheckNetwork.networkConnection(AddressesListActivity.this)) {
+
+                    mSetUpCommuteInfoForAddresses = new SetUpCommuteInfoForAddresses(AddressesListActivity.this,
+                        getLastKnownLocation());
+
+                    mSetUpCommuteInfoForAddresses.setUpTravelInfo(AddressesListActivity.this, MapsActivity.class);
+                } else {
+                    Toast.makeText(AddressesListActivity.this, "Please Check Network Connection",
+                        Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
+
+    }
+    public Location getLastKnownLocation() {
+
+        if (ActivityCompat.checkSelfPermission(AddressesListActivity.this
+            , Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(AddressesListActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) !=
+                PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return null;
+        }
+        Location location = LocationServices.FusedLocationApi.getLastLocation(
+            mGoogleApiClient);
+
+        return location;
+    }
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
 
     }
 
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
     }
 }
