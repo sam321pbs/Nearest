@@ -13,6 +13,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.example.sammengistu.nearest.AddressLab;
 import com.example.sammengistu.nearest.R;
 import com.example.sammengistu.nearest.adapters.MapListAdapter;
+import com.example.sammengistu.nearest.dialogs.SortDialog;
+import com.example.sammengistu.nearest.fragments.AddressesListFragment;
 import com.example.sammengistu.nearest.models.Address;
 
 import android.Manifest;
@@ -24,22 +26,26 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 public class MapsActivity extends FragmentActivity implements
     GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     private static final String TAG = "MapActivity";
+    private static final int GET_SORT_TYPE = 5;
     private GoogleMap mMap;
     private ListView mCommuteInfoListView;
     private List<android.location.Address> geocodeMatches;
@@ -48,6 +54,7 @@ public class MapsActivity extends FragmentActivity implements
     private Location mLastLocation;
     private ArrayAdapter<Address> mAdapter;
 
+    @SuppressWarnings("deprecation")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,6 +62,21 @@ public class MapsActivity extends FragmentActivity implements
         setUpMapIfNeeded();
         geocodeMatches = null;
         mMap.setMyLocationEnabled(true);
+
+        Toolbar myToolbar = (Toolbar) findViewById(R.id.toolbar_maps_activity);
+        myToolbar.setBackgroundColor(getResources().getColor(R.color.theme_primary));
+
+        TextView sortTextView = (TextView) findViewById(R.id.sort_toolbar);
+        sortTextView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SortDialog sortDialog = new SortDialog();
+                sortDialog.setTargetFragment(MapsActivity.this,
+                    GET_SORT_TYPE);
+            }
+        });
+
+
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
             != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
