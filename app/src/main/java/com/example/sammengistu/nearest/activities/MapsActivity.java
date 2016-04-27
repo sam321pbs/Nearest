@@ -12,9 +12,9 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import com.example.sammengistu.nearest.AddressLab;
 import com.example.sammengistu.nearest.R;
+import com.example.sammengistu.nearest.SortAddress;
 import com.example.sammengistu.nearest.adapters.MapListAdapter;
 import com.example.sammengistu.nearest.dialogs.SortDialog;
-import com.example.sammengistu.nearest.fragments.AddressesListFragment;
 import com.example.sammengistu.nearest.models.Address;
 
 import android.Manifest;
@@ -25,6 +25,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -36,13 +37,11 @@ import android.widget.TextView;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 
 public class MapsActivity extends FragmentActivity implements
-    GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+    GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
+    SortDialog.SortListener {
 
     private static final String TAG = "MapActivity";
     private static final int GET_SORT_TYPE = 5;
@@ -53,6 +52,7 @@ public class MapsActivity extends FragmentActivity implements
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
     private ArrayAdapter<Address> mAdapter;
+    private List<Address> mAddresses;
 
     @SuppressWarnings("deprecation")
     @Override
@@ -70,12 +70,11 @@ public class MapsActivity extends FragmentActivity implements
         sortTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 SortDialog sortDialog = new SortDialog();
-                sortDialog.setTargetFragment(MapsActivity.this,
-                    GET_SORT_TYPE);
+                sortDialog.show(getSupportFragmentManager(), "Sort dialog");
             }
         });
-
 
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
@@ -101,23 +100,11 @@ public class MapsActivity extends FragmentActivity implements
                 .build();
         }
 
-        List<Address> addresses =
-            AddressLab.get(getApplicationContext()).getmAddressBook();
+        mAddresses = AddressLab.get(getApplicationContext()).getmAddressBook();
 
-        Collections.sort(addresses, new Comparator<Address>() {
-            @Override
-            public int compare(Address lhs, Address rhs) {
-                String numberFirstAddress = lhs.getDistance().split("\\s")[0];
-                String numberSecondAddress = rhs.getDistance().split("\\s")[0];
+        mAddresses = SortAddress.sortAddresses(mAddresses, true);
 
-                Double doub = Double.parseDouble(numberFirstAddress);
-                Double double2 = Double.parseDouble(numberSecondAddress);
-
-                return doub.compareTo(double2);
-            }
-        });
-
-        for (Address a : addresses) {
+        for (Address a : mAddresses) {
             if (a.isShowOnMap()) {
                 mAddressesToShowOnMap.add(a);
             }
@@ -142,7 +129,8 @@ public class MapsActivity extends FragmentActivity implements
 
     /**
      * Sets up the map if it is possible to do so (i.e., the Google Play services APK is correctly
-     * installed) and the map has not already been instantiated.. This will ensure that we only ever
+     * installed) and the map has not already been instantiated.. This will ensure that we only
+     * ever
      * call {@link #setUpMap()} once when {@link #mMap} is not null.
      * <p/>
      * If it isn't installed {@link SupportMapFragment} (and
@@ -218,6 +206,7 @@ public class MapsActivity extends FragmentActivity implements
 
         super.onStart();
     }
+
     @Override
     protected void onStop() {
         mGoogleApiClient.disconnect();
@@ -259,4 +248,17 @@ public class MapsActivity extends FragmentActivity implements
 
     }
 
+    @Override
+    public void onDialogPositiveClick(DialogFragment dialog, boolean distance) {
+
+        mAddresses = SortAddress.sortAddresses(mAddresses, distance);
+
+
+        mAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void onDialogNegativeClick(DialogFragment dialog) {
+
+    }
 }

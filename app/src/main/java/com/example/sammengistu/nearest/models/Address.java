@@ -19,7 +19,7 @@ public class Address {
     private double mLatitude;
     private double mLongitude;
     private String mDistance;
-    private String mDuration;
+    private String mCommuteTime;
 
     public Address(String fullAddress) {
         mId = UUID.randomUUID();
@@ -98,11 +98,11 @@ public class Address {
         mDistance = distance;
     }
 
-    public String getDuration() {
-        return mDuration;
+    public String getCommuteTime() {
+        return mCommuteTime;
     }
 
-    public void setDuration(String duration) {
-        mDuration = duration;
+    public void setCommuteTime(String commuteTime) {
+        mCommuteTime = commuteTime;
     }
 }

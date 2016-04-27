@@ -82,7 +82,7 @@ public class SetUpCommuteInfoForAddresses {
                                 List<String> destinationTimes = getDurationOfCommutes(jsonData, mAppContext);
                                 List<String> destinationDistances = getDistanceOfCommutes(jsonData, mAppContext);
                                 for (int i = 0; i < destinationTimes.size(); i++) {
-                                    mAddresses.get(i).setDuration(destinationTimes.get(i));
+                                    mAddresses.get(i).setCommuteTime(destinationTimes.get(i));
                                     mAddresses.get(i).setDistance(destinationDistances.get(i));
                                 }
 
@@ -183,5 +183,4 @@ public class SetUpCommuteInfoForAddresses {
 
         return currentLocationAddress;
     }
-
 }

@@ -48,6 +48,7 @@
             android:screenOrientation="portrait"
             android:alwaysRetainTaskState="true">
         </activity>
+
         <activity
             android:name=".activities.AddressActivity"
             android:label="@string/app_name"

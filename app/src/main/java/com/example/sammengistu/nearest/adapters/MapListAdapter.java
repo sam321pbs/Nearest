@@ -49,8 +49,8 @@ public class MapListAdapter extends ArrayAdapter<Address> {
         TextView commuteDistance = (TextView)
             convertView.findViewById(R.id.list_item_distance_details);
 
-        if (addressToShowOnMap.getDuration() != null) {
-            commuteTime.setText(addressToShowOnMap.getDuration());
+        if (addressToShowOnMap.getCommuteTime() != null) {
+            commuteTime.setText(addressToShowOnMap.getCommuteTime());
         } else {
             commuteTime.setText("0 min");
         }
