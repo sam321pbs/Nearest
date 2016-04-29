@@ -11,6 +11,7 @@ import com.example.sammengistu.nearest.AddressLab;
 import com.example.sammengistu.nearest.R;
 import com.example.sammengistu.nearest.models.Address;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
@@ -111,7 +112,7 @@ public class PopUpMapDialog extends DialogFragment {
         builder.setPositiveButton("Take me there", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                startGoogleMaps(address);
+                startGoogleMaps(address, getActivity());
 
             }
         });
@@ -149,15 +150,15 @@ public class PopUpMapDialog extends DialogFragment {
         }
     }
 
-    private void startGoogleMaps(String address) {
+    public static void startGoogleMaps(String address, Activity activity) {
 
         Uri gmmIntentUri = Uri.parse("geo:0,0?q= " + address);
         Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
         mapIntent.setPackage("com.google.android.apps.maps");
-        if (mapIntent.resolveActivity(getActivity().getPackageManager()) != null) {
-            startActivity(mapIntent);
+        if (mapIntent.resolveActivity(activity.getPackageManager()) != null) {
+            activity.startActivity(mapIntent);
         } else {
-            Toast.makeText(getActivity(), "Please download google maps",
+            Toast.makeText(activity, "Please download google maps",
                 Toast.LENGTH_SHORT).show();
         }
     }

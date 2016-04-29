@@ -15,6 +15,7 @@ import com.example.sammengistu.nearest.R;
 import com.example.sammengistu.nearest.SortAddress;
 import com.example.sammengistu.nearest.adapters.MapListAdapter;
 import com.example.sammengistu.nearest.dialogs.SortDialog;
+import com.example.sammengistu.nearest.dialogs.TakeMeThereDialog;
 import com.example.sammengistu.nearest.models.Address;
 
 import android.Manifest;
@@ -123,6 +124,16 @@ public class MapsActivity extends FragmentActivity implements
 
                 LatLng currentItemOnList = new LatLng(address.getLatitude(), address.getLongitude());
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentItemOnList, 15));
+            }
+        });
+
+        mCommuteInfoListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                Address address = ((MapListAdapter) mCommuteInfoListView.getAdapter()).getItem(position);
+                TakeMeThereDialog takeMeThereDialog = TakeMeThereDialog.newInstance(address.getFullAddress());
+                takeMeThereDialog.show(getSupportFragmentManager(), "GO");
+                return false;
             }
         });
     }

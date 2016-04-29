@@ -6,7 +6,6 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
@@ -120,17 +119,5 @@ public class SortDialog extends DialogFragment {
             })
             .setOnCancelListener(null)
             .create();
-    }
-
-    private void sendResult(int resultCode, int sortInt) {
-        if (getTargetFragment() == null) {
-            return;
-        }
-
-        Intent intent = new Intent();
-        intent.putExtra(SELECTED_SORT_METHOD, sortInt);
-
-        getTargetFragment()
-            .onActivityResult(getTargetRequestCode(), resultCode, intent);
     }
 }
