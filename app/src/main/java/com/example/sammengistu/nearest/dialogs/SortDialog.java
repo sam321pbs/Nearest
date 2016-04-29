@@ -13,6 +13,7 @@ import android.support.v4.app.DialogFragment;
 import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.RadioButton;
+import android.widget.TextView;
 
 /**
  * Created by SamMengistu on 4/26/16.
@@ -26,6 +27,8 @@ public class SortDialog extends DialogFragment {
 
     private RadioButton mTimeRadioButton;
     private RadioButton mDistanceRadioButton;
+    private TextView mTimeTextView;
+    private TextView mDistanceTextView;
 
     public interface SortListener {
         public void onDialogPositiveClick(DialogFragment dialog, boolean showDistance);
@@ -60,6 +63,28 @@ public class SortDialog extends DialogFragment {
 
         mTimeRadioButton = (RadioButton) titleDialog.findViewById(R.id.show_by_time);
         mDistanceRadioButton = (RadioButton) titleDialog.findViewById(R.id.show_by_distance);
+        mTimeTextView = (TextView) titleDialog.findViewById(R.id.show_by_time_text_view);
+        mDistanceTextView = (TextView) titleDialog.findViewById(R.id.show_by_distance_text_view);
+
+        mTimeTextView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mTimeRadioButton.setChecked(true);
+                if (mTimeRadioButton.isChecked()) {
+                    mDistanceRadioButton.setChecked(false);
+                }
+            }
+        });
+
+        mDistanceTextView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mDistanceRadioButton.setChecked(true);
+                if (mDistanceRadioButton.isChecked()) {
+                    mTimeRadioButton.setChecked(false);
+                }
+            }
+        });
 
         mDistanceRadioButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override

@@ -9,6 +9,7 @@ import com.example.sammengistu.nearest.R;
 import com.example.sammengistu.nearest.SetUpCommuteInfoForAddresses;
 
 import android.Manifest;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -45,6 +46,7 @@ public class AddressesListActivity extends AppCompatActivity implements
 
         Toolbar myToolbar = (Toolbar) findViewById(R.id.toolbar);
         myToolbar.setBackgroundColor(getResources().getColor(R.color.theme_primary));
+
         setSupportActionBar(myToolbar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
 
@@ -52,19 +54,10 @@ public class AddressesListActivity extends AppCompatActivity implements
         mapIcon.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (CheckNetwork.networkConnection(AddressesListActivity.this)) {
 
-                    mSetUpCommuteInfoForAddresses = new SetUpCommuteInfoForAddresses(AddressesListActivity.this,
-                        getLastKnownLocation());
-
-                    mSetUpCommuteInfoForAddresses.setUpTravelInfo(AddressesListActivity.this, MapsActivity.class);
-                } else {
-                    Toast.makeText(AddressesListActivity.this, "Please Check Network Connection",
-                        Toast.LENGTH_SHORT).show();
-                }
+                new AsyncTaskLoad().execute();
             }
         });
-
 
     }
     public Location getLastKnownLocation() {
@@ -105,5 +98,38 @@ public class AddressesListActivity extends AppCompatActivity implements
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
+    }
+
+    public class AsyncTaskLoad extends android.os.AsyncTask<Void, Void, Void>{
+        ProgressDialog progress = new ProgressDialog(AddressesListActivity.this);
+
+        @Override
+        protected void onPreExecute() {
+
+            progress.setTitle("Loading");
+            progress.show();
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            // To dismiss the dialog
+                progress.dismiss();
+        }
+
+        @Override
+        protected Void doInBackground(Void... params) {
+
+            if (CheckNetwork.networkConnection(AddressesListActivity.this)) {
+
+                mSetUpCommuteInfoForAddresses = new SetUpCommuteInfoForAddresses(AddressesListActivity.this,
+                    getLastKnownLocation());
+
+                mSetUpCommuteInfoForAddresses.setUpTravelInfo(AddressesListActivity.this, MapsActivity.class);
+            } else {
+                Toast.makeText(AddressesListActivity.this, "Please Check Network Connection",
+                    Toast.LENGTH_SHORT).show();
+            }
+            return null;
+        }
     }
 }
