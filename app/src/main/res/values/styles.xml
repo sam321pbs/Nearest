@@ -5,4 +5,25 @@
         <!-- Customize your theme here. -->
     </style>
 
+    <style name="floating_action_button_prop">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_gravity">end</item>
+        <item name="android:layout_marginBottom">65dp</item>
+        <item name="android:src">@drawable/fab_plus</item>
+        <item name="android:layout_marginEnd">16dp</item>
+    </style>
+
+    <style name="card_view_basic_style">
+
+    <item name="android:layout_marginEnd">16dp</item>
+    <item name="android:layout_marginStart">16dp</item>
+    <item name="android:layout_gravity">center</item>
+    <item name="android:orientation">vertical</item>
+    <item name="android:layout_width">match_parent</item>
+    <item name="android:layout_height">wrap_content</item>
+    <item name="android:layout_marginTop">10dp</item>
+
+    </style>
+
 </resources>

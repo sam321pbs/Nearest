@@ -13,9 +13,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.example.sammengistu.nearest.AddressLab;
 import com.example.sammengistu.nearest.R;
 import com.example.sammengistu.nearest.SortAddress;
-import com.example.sammengistu.nearest.adapters.MapListAdapter;
+import com.example.sammengistu.nearest.adapters.CardViewMapInfoAdapter;
 import com.example.sammengistu.nearest.dialogs.SortDialog;
-import com.example.sammengistu.nearest.dialogs.TakeMeThereDialog;
 import com.example.sammengistu.nearest.models.Address;
 
 import android.Manifest;
@@ -28,10 +27,11 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -54,6 +54,11 @@ public class MapsActivity extends FragmentActivity implements
     private Location mLastLocation;
     private ArrayAdapter<Address> mAdapter;
     private List<Address> mAddresses;
+
+    private RecyclerView.LayoutManager mLayoutManager;
+
+    private RecyclerView mRecyclerViewCommuteInfo;
+    private RecyclerView.Adapter mAdapterCards;
 
     @SuppressWarnings("deprecation")
     @Override
@@ -111,31 +116,47 @@ public class MapsActivity extends FragmentActivity implements
             }
         }
 
-        mCommuteInfoListView = (ListView) findViewById(android.R.id.list);
-        mCommuteInfoListView.getLayoutParams().height = 400;
+        //        mAdapter = new MapListAdapter(this, mAddressesToShowOnMap);
+//        mCommuteInfoListView.setAdapter(mAdapter);
 
-        mAdapter = new MapListAdapter(this, mAddressesToShowOnMap);
-        mCommuteInfoListView.setAdapter(mAdapter);
+//        mCommuteInfoListView = (ListView) findViewById(android.R.id.list);
+//        mCommuteInfoListView.getLayoutParams().height = 400;
+//
+//        mCommuteInfoListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//            @Override
+//            public void onItemClick(AdapterView<?> a, View v, int position, long id) {
+//                Address address = ((MapListAdapter) mCommuteInfoListView.getAdapter()).getItem(position);
+//
+//                LatLng currentItemOnList = new LatLng(address.getLatitude(), address.getLongitude());
+//                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentItemOnList, 15));
+//            }
+//        });
+//
+//        mCommuteInfoListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+//            @Override
+//            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+//                Address address = ((MapListAdapter) mCommuteInfoListView.getAdapter()).getItem(position);
+//                TakeMeThereDialog takeMeThereDialog = TakeMeThereDialog.newInstance(address.getFullAddress());
+//                takeMeThereDialog.show(getSupportFragmentManager(), "GO");
+//                return false;
+//            }
+//        });
+        mRecyclerViewCommuteInfo = (RecyclerView) findViewById(R.id.map_info_recycler_view);
 
-        mCommuteInfoListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> a, View v, int position, long id) {
-                Address address = ((MapListAdapter) mCommuteInfoListView.getAdapter()).getItem(position);
+        mLayoutManager = new LinearLayoutManager(this);
 
-                LatLng currentItemOnList = new LatLng(address.getLatitude(), address.getLongitude());
-                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentItemOnList, 15));
-            }
-        });
+        if (mRecyclerViewCommuteInfo != null) {
+            // use this setting to improve performance if you know that changes
+            // in content do not change the layout size of the RecyclerView
+            mRecyclerViewCommuteInfo.setHasFixedSize(true);
+            mRecyclerViewCommuteInfo.setLayoutManager(mLayoutManager);
+        }
 
-        mCommuteInfoListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                Address address = ((MapListAdapter) mCommuteInfoListView.getAdapter()).getItem(position);
-                TakeMeThereDialog takeMeThereDialog = TakeMeThereDialog.newInstance(address.getFullAddress());
-                takeMeThereDialog.show(getSupportFragmentManager(), "GO");
-                return false;
-            }
-        });
+        Log.i(TAG, "address size = " + mAddressesToShowOnMap.size());
+        mAdapterCards = new CardViewMapInfoAdapter(mAddressesToShowOnMap);
+        mRecyclerViewCommuteInfo.setAdapter(mAdapterCards);
+
+
     }
 
     /**
