@@ -1,8 +1,14 @@
 package com.example.sammengistu.nearest.activities;
 
 import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.places.AutocompleteFilter;
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.ui.PlaceAutocomplete;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapView;
@@ -12,27 +18,34 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import com.example.sammengistu.nearest.AddressLab;
 import com.example.sammengistu.nearest.R;
+import com.example.sammengistu.nearest.SetUpCommuteInfoForAddresses;
 import com.example.sammengistu.nearest.SortAddress;
 import com.example.sammengistu.nearest.adapters.CardViewMapInfoAdapter;
 import com.example.sammengistu.nearest.dialogs.SortDialog;
 import com.example.sammengistu.nearest.models.Address;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Geocoder;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.ArrayAdapter;
+import android.widget.FrameLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -48,17 +61,22 @@ public class MapsActivity extends FragmentActivity implements
     private static final int GET_SORT_TYPE = 5;
     private GoogleMap mMap;
     private ListView mCommuteInfoListView;
+    private static final int GET_TITLE = 2;
+    private Address mSelectedAddress;
     private List<android.location.Address> geocodeMatches;
     private List<Address> mAddressesToShowOnMap = new ArrayList<>();
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
     private ArrayAdapter<Address> mAdapter;
-    private List<Address> mAddresses;
 
+    private List<Address> mAddresses;
+    private final int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
     private RecyclerView.LayoutManager mLayoutManager;
 
     private RecyclerView mRecyclerViewCommuteInfo;
     private RecyclerView.Adapter mAdapterCards;
+
+    private FloatingActionButton mFloatingActionButtonAddAddress;
 
     @SuppressWarnings("deprecation")
     @Override
@@ -79,6 +97,38 @@ public class MapsActivity extends FragmentActivity implements
 
                 SortDialog sortDialog = new SortDialog();
                 sortDialog.show(getSupportFragmentManager(), "Sort dialog");
+
+            }
+        });
+
+        mFloatingActionButtonAddAddress = (FloatingActionButton) findViewById(R.id.fab_add);
+
+
+        mFloatingActionButtonAddAddress.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+
+                    AutocompleteFilter typeFilter = new AutocompleteFilter.Builder()
+                        .setTypeFilter(AutocompleteFilter.TYPE_FILTER_ADDRESS)
+                        .build();
+
+                    Intent intent =
+                        new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_OVERLAY)
+                            .setFilter(typeFilter)
+                            .build(MapsActivity.this);
+
+                    startActivityForResult(intent, PLACE_AUTOCOMPLETE_REQUEST_CODE);
+
+                } catch (GooglePlayServicesRepairableException e) {
+                    // TODO: Handle the error.
+                    Log.i(TAG, e.getMessage());
+                } catch (GooglePlayServicesNotAvailableException e) {
+                    // TODO: Handle the error.
+                    Log.i(TAG, e.getMessage());
+
+
+                }
             }
         });
 
@@ -143,6 +193,7 @@ public class MapsActivity extends FragmentActivity implements
 //        });
         mRecyclerViewCommuteInfo = (RecyclerView) findViewById(R.id.map_info_recycler_view);
 
+
         mLayoutManager = new LinearLayoutManager(this);
 
         if (mRecyclerViewCommuteInfo != null) {
@@ -153,10 +204,56 @@ public class MapsActivity extends FragmentActivity implements
         }
 
         Log.i(TAG, "address size = " + mAddressesToShowOnMap.size());
-        mAdapterCards = new CardViewMapInfoAdapter(mAddressesToShowOnMap);
-        mRecyclerViewCommuteInfo.setAdapter(mAdapterCards);
+        mRecyclerViewCommuteInfo.setAdapter(new CardViewMapInfoAdapter(mAddresses, this));
+
+//        mAdapterCards = new CardViewMapInfoAdapter(mAddressesToShowOnMap);
+//        mRecyclerViewCommuteInfo.setAdapter(mAdapterCards);
 
 
+    }
+
+    /**
+     * Sets up floating action bar based on the screen size
+     * if the width of the screen is less then 600pixels it
+     * will show th action button on the top of the screen
+     */
+    private void setUpFloatingActionButton() {
+
+
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+
+        int widthPixels = metrics.widthPixels;
+        int heightPixels = metrics.heightPixels;
+
+        float scaleFactor = metrics.density;
+
+        float widthDp = widthPixels / scaleFactor;
+        float heightDp = heightPixels / scaleFactor;
+
+        float smallestWidth = Math.min(widthDp, heightDp);
+
+        if (smallestWidth <= 600) {
+
+            //Device is a 7" tablet
+            int actionBarHeight = 10;
+            // Calculate ActionBar height
+            TypedValue tv = new TypedValue();
+            if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
+
+                actionBarHeight = TypedValue.complexToDimensionPixelSize(tv.data,
+                    getResources().getDisplayMetrics());
+            }
+
+            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+            );
+
+            params.gravity = Gravity.END;
+            params.setMargins(0, actionBarHeight / 2, 16, 0);
+//            mNewPostFAB.setLayoutParams(params);
+        }
     }
 
     /**
@@ -224,6 +321,87 @@ public class MapsActivity extends FragmentActivity implements
         LatLng currentItemOnList = new LatLng(latitude, longitude);
 
         mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentItemOnList, 15));
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        if (requestCode == PLACE_AUTOCOMPLETE_REQUEST_CODE) {
+
+            if (resultCode == this.RESULT_OK) {
+                Place place = PlaceAutocomplete.getPlace(this, data);
+
+                Log.i(TAG, "Place: " + place.getAddress());
+
+                mSelectedAddress = null;
+
+                mSelectedAddress = new Address(place.getAddress().toString());
+
+                AddressLab.get(this).addAddress(mSelectedAddress);
+
+//                LoadCommuteInfoTask loadCommuteInfoTask = new LoadCommuteInfoTask(this, mAdapterCards,
+//                    getLastKnownLocation(), AddressLab.get(this).getmAddressBook(), mMap,
+//                    mRecyclerViewCommuteInfo);
+//
+//
+//                loadCommuteInfoTask.execute();
+
+                mRecyclerViewCommuteInfo.setAdapter(new CardViewMapInfoAdapter(
+                    AddressLab.get(this).getmAddressBook(), this));
+
+                SetUpCommuteInfoForAddresses setUpCommuteInfoForAddresses =
+                    new SetUpCommuteInfoForAddresses(this, getLastKnownLocation(),
+                        mRecyclerViewCommuteInfo);
+
+                setUpCommuteInfoForAddresses.setUpTravelInfo(AddressLab.get(this).getmAddressBook());
+
+
+//
+//                TypeTitleDialog typeTitleDialog = new TypeTitleDialog();
+//                typeTitleDialog.setDialogResult(new TypeTitleDialog.OnMyDialogResult() {
+//                    @Override
+//                    public void finish(String result) {
+//                        mSelectedAddress.setTitle(result);
+//
+//                        AddressLab.get(MapsActivity.this).addAddress(mSelectedAddress);
+//
+//                        AddressLab.get(MapsActivity.this).saveAddress();
+//                    }
+//                });
+
+//                typeTitleDialog.show(this.getSupportFragmentManager(),
+//                    TypeTitleDialog.TYPED_TITLE_STRING);
+
+            } else if (resultCode == PlaceAutocomplete.RESULT_ERROR) {
+                Status status = PlaceAutocomplete.getStatus(this, data);
+                // TODO: Handle the error.
+                Log.i(TAG, status.getStatusMessage());
+
+            } else {
+                // The user canceled the operation.
+            }
+        }
+    }
+
+    public Location getLastKnownLocation() {
+
+        if (ActivityCompat.checkSelfPermission(this
+            , Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+            ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) !=
+                PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return null;
+        }
+        Location location = LocationServices.FusedLocationApi.getLastLocation(
+            mGoogleApiClient);
+
+        return location;
     }
 
     @Override

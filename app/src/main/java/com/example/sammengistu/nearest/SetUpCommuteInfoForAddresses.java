@@ -1,5 +1,6 @@
 package com.example.sammengistu.nearest;
 
+import com.example.sammengistu.nearest.adapters.CardViewMapInfoAdapter;
 import com.example.sammengistu.nearest.models.Address;
 import com.squareup.okhttp.Call;
 import com.squareup.okhttp.Callback;
@@ -13,9 +14,9 @@ import org.json.JSONObject;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.location.Geocoder;
 import android.location.Location;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
 import java.io.IOException;
@@ -33,25 +34,39 @@ public class SetUpCommuteInfoForAddresses {
     private List<Address> mAddresses;
     private String mUrlForMaps;
     public static Geocoder mGeoCoder;
-    private Context mAppContext;
+    private Activity mAppContext;
     private Location mCurrentLocation;
+    private RecyclerView mRecyclerView;
 
-    public SetUpCommuteInfoForAddresses (Context appContext, Location currentLocation){
+    public SetUpCommuteInfoForAddresses (Activity appContext, Location currentLocation, RecyclerView recyclerView){
 
         mCurrentLocation = currentLocation;
         mAppContext = appContext;
         mAddresses = AddressLab.get(appContext).getmAddressBook();
         mUrlForMaps = AddressLab.get(appContext).createAddressUrl();
         mGeoCoder = new Geocoder(appContext, Locale.getDefault());
+        mRecyclerView = recyclerView;
     }
 
-    public void setUpTravelInfo(final Activity currentActivity, final Class<?> mapClass) {
-        if (mAddresses != null) {
+    public String createAddressUrl(List<Address> addressList) {
+
+        String url = "";
+        for (Address address : addressList) {
+            url += (address.getGoogleFormattedAddress());
+            url += ("|");
+        }
+        return (url.length() == 0 ? "" : url.substring(0, url.length() - 1));
+    }
+
+    public void setUpTravelInfo(final List<Address> addressList) {
+
+        if (addressList != null) {
             try {
                 URL googlePlaces =
                         new URL("https://maps.googleapis.com/maps/api/distancematrix/json?" +
                                 "origins=" + getAddressOfCurrentLocation(mCurrentLocation) +
-                                "&destinations=" + URLEncoder.encode(mUrlForMaps, "UTF-8").replaceAll("\\+", "%20") +
+                                "&destinations=" + URLEncoder.encode(
+                            createAddressUrl(addressList), "UTF-8").replaceAll("\\+", "%20") +
                                 "&units=imperial&types=geocode&language=en&sensor=true&key=" +
                             //Todo: Remove key
                             mAppContext.getString(R.string.api_key_url));
@@ -82,12 +97,28 @@ public class SetUpCommuteInfoForAddresses {
                                 List<String> destinationTimes = getDurationOfCommutes(jsonData, mAppContext);
                                 List<String> destinationDistances = getDistanceOfCommutes(jsonData, mAppContext);
                                 for (int i = 0; i < destinationTimes.size(); i++) {
-                                    mAddresses.get(i).setCommuteTime(destinationTimes.get(i));
-                                    mAddresses.get(i).setDistance(destinationDistances.get(i));
+                                    addressList.get(i).setCommuteTime(destinationTimes.get(i));
+                                    addressList.get(i).setDistance(destinationDistances.get(i));
+                                    Log.i(TAG, "Destenation times = " + destinationTimes.get(i));
                                 }
 
-                                Intent intent = new Intent(currentActivity, mapClass);
-                                currentActivity.startActivity(intent);
+                                mAppContext.runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        List<Address> addressListToSort = SortAddress
+                                            .sortAddresses(AddressLab.get(mAppContext)
+                                                .getmAddressBook(), true);
+
+                                        mRecyclerView.setAdapter(new CardViewMapInfoAdapter(
+                                            addressListToSort, mAppContext));
+                                        mRecyclerView.getAdapter().notifyDataSetChanged();
+                                    }
+                                });
+//                                mRecyclerView.setAdapter(new CardViewMapInfoAdapter(addressList));
+
+
+//                                Intent intent = new Intent(currentActivity, mapClass);
+//                                currentActivity.startActivity(intent);
                             }
                         } catch (Exception e) {
                             Log.i(TAG, "Failed " + e.getMessage());
@@ -182,5 +213,23 @@ public class SetUpCommuteInfoForAddresses {
         Log.i(TAG, currentLocationAddress);
 
         return currentLocationAddress;
+    }
+
+    public class CommuteInfoBundle {
+        private String mDuration;
+        private String mCommuteTime;
+
+        public CommuteInfoBundle(String duration, String commuteTime) {
+            mDuration = duration;
+            mCommuteTime = commuteTime;
+        }
+
+        public String getDuration() {
+            return mDuration;
+        }
+
+        public String getCommuteTime() {
+            return mCommuteTime;
+        }
     }
 }

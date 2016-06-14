@@ -5,7 +5,6 @@ import com.example.sammengistu.nearest.R;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.DialogFragment;
@@ -19,8 +18,9 @@ public class TypeTitleDialog extends DialogFragment {
 
     public static final int TYPED_TITLE = 11;
     public static final String TYPED_TITLE_STRING = "Typed Title";
+    OnMyDialogResult mDialogResult; // the callback
 
-    private String mTypedTitle = "";
+    private EditText mTypedTitleEditText;
 
     @NonNull
     @Override
@@ -28,31 +28,44 @@ public class TypeTitleDialog extends DialogFragment {
         View titleDialog = getActivity().getLayoutInflater()
             .inflate(R.layout.address_title_dialog, null);
 
-        final EditText typedTitleEditText = (EditText)titleDialog.findViewById(R.id.type_title_edit_text);
-
+        mTypedTitleEditText = (EditText) titleDialog.findViewById(R.id.type_title_edit_text);
 
         return new AlertDialog.Builder(getActivity())
             .setView(titleDialog)
-            .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-
-                    mTypedTitle = typedTitleEditText.getText().toString();
-                    sendResult(TYPED_TITLE);
-                }
-            })
+            .setPositiveButton("Ok", new OnClickOkListener())
             .create();
     }
 
-    private void sendResult(int resultCode) {
-        if (getTargetFragment() == null) {
-            return;
+    private class OnClickOkListener implements DialogInterface.OnClickListener {
+
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+            if (mTypedTitleEditText.getText().toString().equals("")) {
+                mDialogResult.finish(mTypedTitleEditText.getText().toString());
+            } else {
+                mDialogResult.finish("");
+            }
         }
-
-        Intent intent = new Intent();
-        intent.putExtra(TYPED_TITLE_STRING, mTypedTitle);
-
-        getTargetFragment()
-            .onActivityResult(getTargetRequestCode(), resultCode, intent);
     }
+
+    public void setDialogResult(OnMyDialogResult dialogResult){
+        mDialogResult = dialogResult;
+    }
+
+
+    public interface OnMyDialogResult{
+        void finish(String result);
+    }
+
+//    private void sendResult(int resultCode) {
+//        if (getTargetFragment() == null) {
+//            return;
+//        }
+//
+//        Intent intent = new Intent();
+//        intent.putExtra(TYPED_TITLE_STRING, mTypedTitle);
+//
+//        getTargetFragment()
+//            .onActivityResult(getTargetRequestCode(), resultCode, intent);
+//    }
 }

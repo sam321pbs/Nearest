@@ -135,10 +135,9 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Address address = ((AddressAdapter) mListView.getAdapter()).getItem(position);
-
-        mSetUpCommuteInfoForAddresses = new SetUpCommuteInfoForAddresses(getActivity(),
-            getLastKnownLocation());
-
+//
+//        mSetUpCommuteInfoForAddresses = new SetUpCommuteInfoForAddresses(getActivity(),
+//            getLastKnownLocation());
 
         getTravelInfoSingleAddress(address);
     }

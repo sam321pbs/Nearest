@@ -121,10 +121,10 @@ public class AddressesListActivity extends AppCompatActivity implements
 
             if (CheckNetwork.networkConnection(AddressesListActivity.this)) {
 
-                mSetUpCommuteInfoForAddresses = new SetUpCommuteInfoForAddresses(AddressesListActivity.this,
-                    getLastKnownLocation());
-
-                mSetUpCommuteInfoForAddresses.setUpTravelInfo(AddressesListActivity.this, MapsActivity.class);
+//                mSetUpCommuteInfoForAddresses = new SetUpCommuteInfoForAddresses(AddressesListActivity.this,
+//                    getLastKnownLocation());
+//
+//                mSetUpCommuteInfoForAddresses.setUpTravelInfo(AddressesListActivity.this, new ArrayList<Address>());
             } else {
                 Toast.makeText(AddressesListActivity.this, "Please Check Network Connection",
                     Toast.LENGTH_SHORT).show();
