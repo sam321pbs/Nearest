@@ -1,14 +1,22 @@
 package com.example.sammengistu.nearest.adapters;
 
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.LatLng;
+
+import com.example.sammengistu.nearest.AddressLab;
 import com.example.sammengistu.nearest.R;
+import com.example.sammengistu.nearest.activities.MapsActivity;
 import com.example.sammengistu.nearest.models.Address;
 
 import android.app.Activity;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.TextView;
 
 import java.util.List;
@@ -20,11 +28,12 @@ public class CardViewMapInfoAdapter extends RecyclerView.Adapter
     private final String TAG = "cardview55";
     private List<Address> mAddressList;
     private Activity mActivity;
+    private GoogleMap mGoogleMap;
 
-    public CardViewMapInfoAdapter(List<Address> addressList, Activity activity) {
-        mAddressList = addressList;
+    public CardViewMapInfoAdapter(Activity activity, GoogleMap map) {
+        mAddressList = AddressLab.get(activity).getmAddressBook();
         mActivity = activity;
-        Log.i(TAG, "Size = " + mAddressList.size());
+        mGoogleMap = map;
     }
 
     @Override
@@ -38,7 +47,7 @@ public class CardViewMapInfoAdapter extends RecyclerView.Adapter
 
     @SuppressWarnings("deprecation")
     @Override
-    public void onBindViewHolder(CommuteInfoViewHolder holder, int position) {
+    public void onBindViewHolder(final CommuteInfoViewHolder holder, final int position) {
 
         Address currentAddress = mAddressList.get(position);
 
@@ -52,6 +61,28 @@ public class CardViewMapInfoAdapter extends RecyclerView.Adapter
         holder.mCommuteAddressTextView.setText(currentAddress.getFullAddress());
         holder.mCommuteDistanceTextView.setText(currentAddress.getDistance());
         holder.mCommuteETATextView.setText(currentAddress.getCommuteTime());
+        holder.mCardView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                double longitude = mAddressList.get(position).getLongitude();
+                double latitude = mAddressList.get(position).getLatitude();
+                LatLng currentItemOnList = new LatLng(latitude, longitude);
+                mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentItemOnList, 15));
+            }
+        });
+
+        ViewTreeObserver viewTreeObserver = holder.mCardView.getViewTreeObserver();
+        if (viewTreeObserver.isAlive()) {
+            viewTreeObserver.addOnGlobalLayoutListener(
+                new ViewTreeObserver.OnGlobalLayoutListener() {
+                    @Override
+                    public void onGlobalLayout() {
+                        holder.mCardView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                        MapsActivity.sFirstCardViewHeight = holder.mCardView.getHeight();
+
+                    }
+                });
+        }
     }
 
     @Override
@@ -65,6 +96,7 @@ public class CardViewMapInfoAdapter extends RecyclerView.Adapter
         public TextView mCommuteDistanceTextView;
         public TextView mCommuteETATextView;
         public TextView mBackground;
+        public CardView mCardView;
 
         public CommuteInfoViewHolder(View itemView) {
             super(itemView);
@@ -73,6 +105,7 @@ public class CardViewMapInfoAdapter extends RecyclerView.Adapter
             mCommuteDistanceTextView = (TextView) itemView.findViewById(R.id.pop_up_distance_view_);
             mCommuteETATextView = (TextView) itemView.findViewById(R.id.pop_up_eta_view);
             mBackground = (TextView) itemView.findViewById(R.id.text_view_background_id);
+            mCardView = (CardView) itemView.findViewById(R.id.card_view);
 
         }
     }

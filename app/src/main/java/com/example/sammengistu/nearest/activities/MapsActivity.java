@@ -25,6 +25,7 @@ import com.example.sammengistu.nearest.dialogs.SortDialog;
 import com.example.sammengistu.nearest.models.Address;
 
 import android.Manifest;
+import android.animation.ObjectAnimator;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Geocoder;
@@ -44,6 +45,7 @@ import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
 import android.widget.ListView;
@@ -57,13 +59,14 @@ public class MapsActivity extends FragmentActivity implements
     GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
     SortDialog.SortListener {
 
+    private ObjectAnimator mObjectAnimatorEntireListSection;
     private static final String TAG = "MapActivity";
     private static final int GET_SORT_TYPE = 5;
     private GoogleMap mMap;
     private ListView mCommuteInfoListView;
     private static final int GET_TITLE = 2;
     private Address mSelectedAddress;
-    private List<android.location.Address> geocodeMatches;
+    private List<android.location.Address> mGeocodeMatches;
     private List<Address> mAddressesToShowOnMap = new ArrayList<>();
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
@@ -77,6 +80,46 @@ public class MapsActivity extends FragmentActivity implements
     private RecyclerView.Adapter mAdapterCards;
 
     private FloatingActionButton mFloatingActionButtonAddAddress;
+    private TextView mShowHideTextView;
+    private FrameLayout mLocationsDetailListView;
+    private final String ANIMATION_TYPE = "translationY";
+    private final int ANIMATION_SHOW_LIST = 0;
+    private final int ANIMATION_MINIMIZE_LIST = 750;
+    private int mViewListHeight;
+    public static int sFirstCardViewHeight;
+    private FrameLayout mMiniToolbarSize;
+    private int mMiniToolbarHight;
+    private ObjectAnimator mObjectAnimatorFAB;
+    private Toolbar mMyToolbar;
+    private TextView mSortTextView;
+
+    private boolean mShowEntireList;
+
+    private View.OnClickListener mFABOnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            try {
+
+                AutocompleteFilter typeFilter = new AutocompleteFilter.Builder()
+                    .setTypeFilter(AutocompleteFilter.TYPE_FILTER_ADDRESS)
+                    .build();
+
+                Intent intent =
+                    new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_OVERLAY)
+                        .setFilter(typeFilter)
+                        .build(MapsActivity.this);
+
+                startActivityForResult(intent, PLACE_AUTOCOMPLETE_REQUEST_CODE);
+
+            } catch (GooglePlayServicesRepairableException e) {
+                // TODO: Handle the error.
+                Log.i(TAG, e.getMessage());
+            } catch (GooglePlayServicesNotAvailableException e) {
+                // TODO: Handle the error.
+                Log.i(TAG, e.getMessage());
+            }
+        }
+    };
 
     @SuppressWarnings("deprecation")
     @Override
@@ -84,54 +127,31 @@ public class MapsActivity extends FragmentActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
         setUpMapIfNeeded();
-        geocodeMatches = null;
+
+        initializeViews();
+
+        mGeocodeMatches = null;
+        mShowEntireList = false;
         mMap.setMyLocationEnabled(true);
 
-        Toolbar myToolbar = (Toolbar) findViewById(R.id.toolbar_maps_activity);
-        myToolbar.setBackgroundColor(getResources().getColor(R.color.theme_primary));
-
-        TextView sortTextView = (TextView) findViewById(R.id.sort_toolbar);
-        sortTextView.setOnClickListener(new View.OnClickListener() {
+        mShowHideTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                mShowEntireList = !mShowEntireList;
+                animateMovedList(mShowEntireList);
+            }
+        });
 
+        mSortTextView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
                 SortDialog sortDialog = new SortDialog();
                 sortDialog.show(getSupportFragmentManager(), "Sort dialog");
-
             }
         });
 
-        mFloatingActionButtonAddAddress = (FloatingActionButton) findViewById(R.id.fab_add);
-
-
-        mFloatingActionButtonAddAddress.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-
-                    AutocompleteFilter typeFilter = new AutocompleteFilter.Builder()
-                        .setTypeFilter(AutocompleteFilter.TYPE_FILTER_ADDRESS)
-                        .build();
-
-                    Intent intent =
-                        new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_OVERLAY)
-                            .setFilter(typeFilter)
-                            .build(MapsActivity.this);
-
-                    startActivityForResult(intent, PLACE_AUTOCOMPLETE_REQUEST_CODE);
-
-                } catch (GooglePlayServicesRepairableException e) {
-                    // TODO: Handle the error.
-                    Log.i(TAG, e.getMessage());
-                } catch (GooglePlayServicesNotAvailableException e) {
-                    // TODO: Handle the error.
-                    Log.i(TAG, e.getMessage());
-
-
-                }
-            }
-        });
-
+        mFloatingActionButtonAddAddress.setOnClickListener(mFABOnClickListener);
+        mMyToolbar.setBackgroundColor(getResources().getColor(R.color.theme_primary));
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
             != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
@@ -158,42 +178,6 @@ public class MapsActivity extends FragmentActivity implements
 
         mAddresses = AddressLab.get(getApplicationContext()).getmAddressBook();
 
-        mAddresses = SortAddress.sortAddresses(mAddresses, true);
-
-        for (Address a : mAddresses) {
-            if (a.isShowOnMap()) {
-                mAddressesToShowOnMap.add(a);
-            }
-        }
-
-        //        mAdapter = new MapListAdapter(this, mAddressesToShowOnMap);
-//        mCommuteInfoListView.setAdapter(mAdapter);
-
-//        mCommuteInfoListView = (ListView) findViewById(android.R.id.list);
-//        mCommuteInfoListView.getLayoutParams().height = 400;
-//
-//        mCommuteInfoListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//            @Override
-//            public void onItemClick(AdapterView<?> a, View v, int position, long id) {
-//                Address address = ((MapListAdapter) mCommuteInfoListView.getAdapter()).getItem(position);
-//
-//                LatLng currentItemOnList = new LatLng(address.getLatitude(), address.getLongitude());
-//                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentItemOnList, 15));
-//            }
-//        });
-//
-//        mCommuteInfoListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-//            @Override
-//            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-//                Address address = ((MapListAdapter) mCommuteInfoListView.getAdapter()).getItem(position);
-//                TakeMeThereDialog takeMeThereDialog = TakeMeThereDialog.newInstance(address.getFullAddress());
-//                takeMeThereDialog.show(getSupportFragmentManager(), "GO");
-//                return false;
-//            }
-//        });
-        mRecyclerViewCommuteInfo = (RecyclerView) findViewById(R.id.map_info_recycler_view);
-
-
         mLayoutManager = new LinearLayoutManager(this);
 
         if (mRecyclerViewCommuteInfo != null) {
@@ -203,13 +187,95 @@ public class MapsActivity extends FragmentActivity implements
             mRecyclerViewCommuteInfo.setLayoutManager(mLayoutManager);
         }
 
-        Log.i(TAG, "address size = " + mAddressesToShowOnMap.size());
-        mRecyclerViewCommuteInfo.setAdapter(new CardViewMapInfoAdapter(mAddresses, this));
+        mRecyclerViewCommuteInfo.setAdapter(new CardViewMapInfoAdapter(this, mMap));
 
-//        mAdapterCards = new CardViewMapInfoAdapter(mAddressesToShowOnMap);
-//        mRecyclerViewCommuteInfo.setAdapter(mAdapterCards);
+        setUpLayoutHeights();
+    }
 
+    private void initializeViews() {
+        mMyToolbar = (Toolbar) findViewById(R.id.toolbar_maps_activity);
 
+        mLocationsDetailListView = (FrameLayout) findViewById(R.id.locations_commute_info_view);
+        mMiniToolbarSize = (FrameLayout) findViewById(R.id.mini_tool_bar_size);
+
+        mShowHideTextView = (TextView) findViewById(R.id.show_hide_list);
+        mFloatingActionButtonAddAddress = (FloatingActionButton) findViewById(R.id.fab_add_maps_activity);
+        mSortTextView = (TextView) findViewById(R.id.sort_toolbar);
+        mRecyclerViewCommuteInfo = (RecyclerView) findViewById(R.id.map_info_recycler_view);
+    }
+
+    private void setUpLayoutHeights() {
+        ViewTreeObserver viewTreeObserver2 = mMiniToolbarSize.getViewTreeObserver();
+        if (viewTreeObserver2.isAlive()) {
+            viewTreeObserver2.addOnGlobalLayoutListener(
+                new ViewTreeObserver.OnGlobalLayoutListener() {
+                    @Override
+                    public void onGlobalLayout() {
+                        mMiniToolbarSize.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                        mMiniToolbarHight = mMiniToolbarSize.getHeight();
+                        Log.i(TAG, "MiniToolbar height = " + mMiniToolbarHight);
+                    }
+                });
+        }
+
+        ViewTreeObserver viewTreeObserver = mLocationsDetailListView.getViewTreeObserver();
+        if (viewTreeObserver.isAlive()) {
+            viewTreeObserver.addOnGlobalLayoutListener(
+                new ViewTreeObserver.OnGlobalLayoutListener() {
+                    @Override
+                    public void onGlobalLayout() {
+                        mLocationsDetailListView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                        mViewListHeight = mLocationsDetailListView.getHeight();
+                        animateMovedList(mShowEntireList);
+
+                        Log.i(TAG, "View hight = " + mViewListHeight);
+                    }
+                });
+        }
+    }
+
+    private void animateMovedList(boolean showList) {
+        Log.i(TAG, "Cardview size = " + sFirstCardViewHeight);
+        if (showList) {
+            mObjectAnimatorEntireListSection = ObjectAnimator.ofFloat(mLocationsDetailListView,
+                ANIMATION_TYPE, ANIMATION_SHOW_LIST);
+
+            mObjectAnimatorFAB = ObjectAnimator.ofFloat(mFloatingActionButtonAddAddress,
+                ANIMATION_TYPE, ANIMATION_SHOW_LIST);
+
+        } else {
+
+            mObjectAnimatorEntireListSection = ObjectAnimator.ofFloat(mLocationsDetailListView,
+                ANIMATION_TYPE, mViewListHeight - (sFirstCardViewHeight + 110));
+
+            mObjectAnimatorFAB = ObjectAnimator.ofFloat(mFloatingActionButtonAddAddress,
+                ANIMATION_TYPE, mViewListHeight - (sFirstCardViewHeight + 165));
+
+        }
+        setUpLayoutParamsForListView(showList);
+
+        mObjectAnimatorEntireListSection.start();
+        mObjectAnimatorFAB.start();
+    }
+
+    private void setUpLayoutParamsForListView(boolean showList) {
+        FrameLayout.LayoutParams params;
+        if (showList) {
+            params = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            );
+
+        } else {
+            params = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                sFirstCardViewHeight == 0 ?
+                    300 : sFirstCardViewHeight + 100
+            );
+
+        }
+
+        mLocationsDetailListView.setLayoutParams(params);
     }
 
     /**
@@ -260,7 +326,7 @@ public class MapsActivity extends FragmentActivity implements
      * Sets up the map if it is possible to do so (i.e., the Google Play services APK is correctly
      * installed) and the map has not already been instantiated.. This will ensure that we only
      * ever
-     * call {@link #setUpMap()} once when {@link #mMap} is not null.
+     * call {@link #addMarkerToMap()} once when {@link #mMap} is not null.
      * <p/>
      * If it isn't installed {@link SupportMapFragment} (and
      * {@link MapView MapView}) will show a prompt for the user to
@@ -281,37 +347,38 @@ public class MapsActivity extends FragmentActivity implements
                 .getMap();
             // Check if we were successful in obtaining the map.
             if (mMap != null) {
-                setUpMap();
+                addMarkerToMap();
             }
         }
     }
 
-    private void setUpMap() {
+    private void addMarkerToMap() {
 
         for (Address addressToDisplay : AddressLab.get(getApplicationContext()).getmAddressBook()) {
-            if (addressToDisplay.isShowOnMap()) {
-                double latitude = 0;
-                double longitude = 0;
-                try {
-                    geocodeMatches =
-                        new Geocoder(this).getFromLocationName(
-                            addressToDisplay.getFullAddress(), 1);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                if (!geocodeMatches.isEmpty()) {
-                    latitude = geocodeMatches.get(0).getLatitude();
-                    longitude = geocodeMatches.get(0).getLongitude();
-                    addressToDisplay.setLatitude(latitude);
-                    addressToDisplay.setLongitude(longitude);
-                }
-                mMap.addMarker(
-                    new MarkerOptions().position(new LatLng(latitude, longitude))
-                        .visible(true)
-                        .title(addressToDisplay.getTitle())
-                );
+            Log.i(TAG, "Add to map" + addressToDisplay.getFullAddress());
+
+            double latitude = 0;
+            double longitude = 0;
+            try {
+                mGeocodeMatches =
+                    new Geocoder(this).getFromLocationName(
+                        addressToDisplay.getFullAddress(), 1);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
+            if (!mGeocodeMatches.isEmpty()) {
+                latitude = mGeocodeMatches.get(0).getLatitude();
+                longitude = mGeocodeMatches.get(0).getLongitude();
+                addressToDisplay.setLatitude(latitude);
+                addressToDisplay.setLongitude(longitude);
+            }
+            mMap.addMarker(
+                new MarkerOptions().position(new LatLng(latitude, longitude))
+                    .visible(true)
+                    .title(addressToDisplay.getTitle())
+            );
         }
+
     }
 
     private void zoomOnMyLocation() {
@@ -339,23 +406,19 @@ public class MapsActivity extends FragmentActivity implements
 
                 AddressLab.get(this).addAddress(mSelectedAddress);
 
-//                LoadCommuteInfoTask loadCommuteInfoTask = new LoadCommuteInfoTask(this, mAdapterCards,
-//                    getLastKnownLocation(), AddressLab.get(this).getmAddressBook(), mMap,
-//                    mRecyclerViewCommuteInfo);
-//
-//
-//                loadCommuteInfoTask.execute();
-
                 mRecyclerViewCommuteInfo.setAdapter(new CardViewMapInfoAdapter(
-                    AddressLab.get(this).getmAddressBook(), this));
+                    this, mMap));
 
                 SetUpCommuteInfoForAddresses setUpCommuteInfoForAddresses =
                     new SetUpCommuteInfoForAddresses(this, getLastKnownLocation(),
                         mRecyclerViewCommuteInfo);
 
-                setUpCommuteInfoForAddresses.setUpTravelInfo(AddressLab.get(this).getmAddressBook());
+                setUpCommuteInfoForAddresses.setUpTravelInfo(AddressLab.get(this).getmAddressBook(),
+                    mMap);
 
+                animateMovedList(true);
 
+                addMarkerToMap();
 //
 //                TypeTitleDialog typeTitleDialog = new TypeTitleDialog();
 //                typeTitleDialog.setDialogResult(new TypeTitleDialog.OnMyDialogResult() {
@@ -408,6 +471,12 @@ public class MapsActivity extends FragmentActivity implements
     protected void onResume() {
         super.onResume();
         setUpMapIfNeeded();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        AddressLab.get(this).saveAddress();
     }
 
     @Override

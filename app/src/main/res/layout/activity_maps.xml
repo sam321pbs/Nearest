@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
              android:layout_width="match_parent"
-             android:layout_height="match_parent">
+             android:layout_height="match_parent"
+             xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <android.support.v7.widget.Toolbar
             android:id="@+id/toolbar_maps_activity"
@@ -52,6 +53,14 @@
 
         <include
             layout="@layout/locations_view"/>
+
+        <android.support.design.widget.FloatingActionButton
+                style="@style/floating_action_button_prop"
+                android:layout_marginBottom="16dp"
+                android:id="@+id/fab_add_maps_activity"
+                app:elevation="6dp"
+                app:fabSize="normal"
+                app:pressedTranslationZ="12dp"/>
 
     </FrameLayout>
 

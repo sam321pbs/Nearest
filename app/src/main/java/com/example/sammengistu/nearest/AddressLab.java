@@ -12,21 +12,21 @@ import java.util.UUID;
 
 public class AddressLab {
     private static final String FILENAME = "goal.json";
-    private static final String TAG = "GoalLab";
+    private static final String TAG = "AddressLab";
 
-    private List<Address> mAddressBook;
+    public static List<Address> sAddressBook;
 
     private static AddressLab sAddressLab;
     private AddressJSONSerializer mSerializer;
 
     public AddressLab(Context appContext) {
 
-        mAddressBook = new ArrayList<>();
+        sAddressBook = new ArrayList<>();
 
         mSerializer = new AddressJSONSerializer(appContext, FILENAME);
 
         try {
-            mAddressBook = mSerializer.loadAddresses();
+            sAddressBook = mSerializer.loadAddresses();
         } catch (Exception e) {
             Log.e(TAG, "Error loading todos: ", e);
         }
@@ -34,17 +34,18 @@ public class AddressLab {
 
     public static AddressLab get(Context c) {
         if (sAddressLab == null) {
+            Log.i(TAG, "Address == null, setting up");
             sAddressLab = new AddressLab(c.getApplicationContext());
         }
         return sAddressLab;
     }
 
     public List<Address> getmAddressBook() {
-        return mAddressBook;
+        return sAddressBook;
     }
 
     public Address getAddress(UUID id) {
-        for (Address a : mAddressBook) {
+        for (Address a : sAddressBook) {
             if (a.getmId().equals(id)) {
                 return a;
             }
@@ -55,7 +56,7 @@ public class AddressLab {
     public String createAddressUrl() {
 
         String url = "";
-        for (Address address : mAddressBook) {
+        for (Address address : sAddressBook) {
             url += (address.getGoogleFormattedAddress());
             url += ("|");
         }
@@ -73,21 +74,25 @@ public class AddressLab {
     }
 
     public void addAddress(Address address) {
-        mAddressBook.add(address);
+        sAddressBook.add(address);
     }
 
     public void deleteAddress(Address address) {
-        mAddressBook.remove(address);
+        sAddressBook.remove(address);
     }
 
     public boolean saveAddress() {
         try {
-            mSerializer.saveAddress(mAddressBook);
+            mSerializer.saveAddress(sAddressBook);
             Log.i(TAG, "crimes saved to file");
             return true;
         } catch (Exception e) {
             Log.i(TAG, "Error sacing crimes: " + e);
             return false;
         }
+    }
+
+    public void setList(List<Address> sortedList){
+        sAddressBook = sortedList;
     }
 }

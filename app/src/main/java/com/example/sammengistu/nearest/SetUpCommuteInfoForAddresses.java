@@ -1,5 +1,7 @@
 package com.example.sammengistu.nearest;
 
+import com.google.android.gms.maps.GoogleMap;
+
 import com.example.sammengistu.nearest.adapters.CardViewMapInfoAdapter;
 import com.example.sammengistu.nearest.models.Address;
 import com.squareup.okhttp.Call;
@@ -58,7 +60,7 @@ public class SetUpCommuteInfoForAddresses {
         return (url.length() == 0 ? "" : url.substring(0, url.length() - 1));
     }
 
-    public void setUpTravelInfo(final List<Address> addressList) {
+    public void setUpTravelInfo(final List<Address> addressList, final GoogleMap map) {
 
         if (addressList != null) {
             try {
@@ -99,7 +101,6 @@ public class SetUpCommuteInfoForAddresses {
                                 for (int i = 0; i < destinationTimes.size(); i++) {
                                     addressList.get(i).setCommuteTime(destinationTimes.get(i));
                                     addressList.get(i).setDistance(destinationDistances.get(i));
-                                    Log.i(TAG, "Destenation times = " + destinationTimes.get(i));
                                 }
 
                                 mAppContext.runOnUiThread(new Runnable() {
@@ -108,9 +109,10 @@ public class SetUpCommuteInfoForAddresses {
                                         List<Address> addressListToSort = SortAddress
                                             .sortAddresses(AddressLab.get(mAppContext)
                                                 .getmAddressBook(), true);
+                                        AddressLab.sAddressBook = addressListToSort;
 
-                                        mRecyclerView.setAdapter(new CardViewMapInfoAdapter(
-                                            addressListToSort, mAppContext));
+                                        mRecyclerView.setAdapter(
+                                            new CardViewMapInfoAdapter(mAppContext, map));
                                         mRecyclerView.getAdapter().notifyDataSetChanged();
                                     }
                                 });
@@ -164,7 +166,8 @@ public class SetUpCommuteInfoForAddresses {
         return destinationTimes;
     }
 
-    public static ArrayList<String> getDistanceOfCommutes(String jsonData, Context appContext) throws JSONException {
+    public static ArrayList<String> getDistanceOfCommutes(String jsonData, Context appContext)
+        throws JSONException {
 
         ArrayList<String> destinationDistance = new ArrayList<>();
 
@@ -213,23 +216,5 @@ public class SetUpCommuteInfoForAddresses {
         Log.i(TAG, currentLocationAddress);
 
         return currentLocationAddress;
-    }
-
-    public class CommuteInfoBundle {
-        private String mDuration;
-        private String mCommuteTime;
-
-        public CommuteInfoBundle(String duration, String commuteTime) {
-            mDuration = duration;
-            mCommuteTime = commuteTime;
-        }
-
-        public String getDuration() {
-            return mDuration;
-        }
-
-        public String getCommuteTime() {
-            return mCommuteTime;
-        }
     }
 }

@@ -101,7 +101,7 @@ public class AddressesListFragment extends Fragment implements AbsListView.OnIte
 
         mListView.setOnItemClickListener(this);
 
-        mFloatingActionButtonAddAddress = (FloatingActionButton) v.findViewById(R.id.fab_add);
+        mFloatingActionButtonAddAddress = (FloatingActionButton) v.findViewById(R.id.fab_add_maps_activity);
 
         mFloatingActionButtonAddAddress.setOnClickListener(new View.OnClickListener() {
             @Override

@@ -10,7 +10,6 @@ import android.os.AsyncTask;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class LoadCommuteInfoTask extends AsyncTask<Void, Void, Void> {
@@ -19,7 +18,6 @@ public class LoadCommuteInfoTask extends AsyncTask<Void, Void, Void> {
     private Location mCurrentLocation;
     private Activity mAppContext;
     private List<Address> mAddressesToShowOnMap;
-    private List<SetUpCommuteInfoForAddresses.CommuteInfoBundle> mCommuteInfoBundles;
     private RecyclerView.Adapter mCommuteInfoRecyclerViewAdapter;
     private GoogleMap mGoogleMap;
     private RecyclerView mRecyclerViewAddresses;
@@ -39,7 +37,6 @@ public class LoadCommuteInfoTask extends AsyncTask<Void, Void, Void> {
     @Override
     protected void onPreExecute() {
         mRecyclerViewAddresses.setAdapter(mCommuteInfoRecyclerViewAdapter);
-        mCommuteInfoBundles = new ArrayList<>();
     }
 
     @Override
@@ -60,7 +57,6 @@ public class LoadCommuteInfoTask extends AsyncTask<Void, Void, Void> {
         //  setUpTravelInfo();
 
         List<Address> addressList = mAddressesToShowOnMap;
-        Log.i(TAG, "Commute size = " + mCommuteInfoBundles.size());
 
         for (int i = 0 ; i < mAddressesToShowOnMap.size(); i++) {
             Log.i(TAG, "AddressList size = " + addressList.size());
