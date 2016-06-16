@@ -11,9 +11,7 @@ import android.support.v4.app.DialogFragment;
 import android.view.View;
 import android.widget.TextView;
 
-/**
- * Created by SamMengistu on 4/28/16.
- */
+
 public class TakeMeThereDialog extends DialogFragment {
 
     public static final String ADDRESS_TAKE_ME = "Address take me";
@@ -32,7 +30,6 @@ public class TakeMeThereDialog extends DialogFragment {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
 
-                    PopUpMapDialog.startGoogleMaps(getArguments().getString(ADDRESS_TAKE_ME), getActivity());
                 }
             })
             .setNegativeButton("Cancel", null)

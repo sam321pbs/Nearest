@@ -19,14 +19,14 @@ public class SortAddress {
 
     public static final String TAG = "SortAddress";
 
-    public static List<Address> sortAddresses(final List<Address> addressList, final boolean sortDistance) {
+    public static List<Address> sortAddresses(final List<Address> addressList,
+                                              final boolean sortDistance) {
         List<Address> addressesSorted = new ArrayList<>(addressList);
 
         for (Address address : addressList) {
             Log.i(TAG, "address = " + address.getFullAddress());
             Log.i(TAG, "Length of commute in min = "
                 + convertCommuteTimeToNumber(address.getCommuteTime().split("\\s")));
-
         }
 
         Collections.sort(addressesSorted, new Comparator<Address>() {

@@ -24,4 +24,10 @@
     <string name="eta">ETA</string>
     <string name="api_key_url"></string>
     <string name="show_map_icon">Show map icon</string>
+    <string name="error_getting_commute_info_toast">There was an error getting commute info</string>
+    <string name="sort_by">Sort By</string>
+    <string name="help">Help</string>
+    <string name="are_you_sure_you_want_to_delete">Are you sure you want to delete this address?
+    </string>
+    <string name="show_list">Show List</string>
 </resources>

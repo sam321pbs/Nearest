@@ -20,6 +20,7 @@ import android.location.Geocoder;
 import android.location.Location;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -33,8 +34,6 @@ import java.util.Locale;
 public class SetUpCommuteInfoForAddresses {
 
     private static final String TAG = "SetUpCommute";
-    private List<Address> mAddresses;
-    private String mUrlForMaps;
     public static Geocoder mGeoCoder;
     private Activity mAppContext;
     private Location mCurrentLocation;
@@ -44,8 +43,6 @@ public class SetUpCommuteInfoForAddresses {
 
         mCurrentLocation = currentLocation;
         mAppContext = appContext;
-        mAddresses = AddressLab.get(appContext).getmAddressBook();
-        mUrlForMaps = AddressLab.get(appContext).createAddressUrl();
         mGeoCoder = new Geocoder(appContext, Locale.getDefault());
         mRecyclerView = recyclerView;
     }
@@ -85,57 +82,56 @@ public class SetUpCommuteInfoForAddresses {
                 call.enqueue(new Callback() {
                     @Override
                     public void onFailure(Request request, IOException e) {
-
-                        Log.i(TAG, "failed getting data");
-                        Log.i(TAG, e.getMessage());
-
+                        Toast.makeText(mAppContext, R.string.error_getting_commute_info_toast,
+                            Toast.LENGTH_SHORT).show();
                     }
 
                     @Override
                     public void onResponse(Response response) throws IOException {
-                        try {
-                            String jsonData = response.body().string();
-                            if (response.isSuccessful()) {
-                                List<String> destinationTimes = getDurationOfCommutes(jsonData, mAppContext);
-                                List<String> destinationDistances = getDistanceOfCommutes(jsonData, mAppContext);
-                                for (int i = 0; i < destinationTimes.size(); i++) {
-                                    addressList.get(i).setCommuteTime(destinationTimes.get(i));
-                                    addressList.get(i).setDistance(destinationDistances.get(i));
-                                }
-
-                                mAppContext.runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        List<Address> addressListToSort = SortAddress
-                                            .sortAddresses(AddressLab.get(mAppContext)
-                                                .getmAddressBook(), true);
-                                        AddressLab.sAddressBook = addressListToSort;
-
-                                        mRecyclerView.setAdapter(
-                                            new CardViewMapInfoAdapter(mAppContext, map));
-                                        mRecyclerView.getAdapter().notifyDataSetChanged();
-                                    }
-                                });
-//                                mRecyclerView.setAdapter(new CardViewMapInfoAdapter(addressList));
-
-
-//                                Intent intent = new Intent(currentActivity, mapClass);
-//                                currentActivity.startActivity(intent);
-                            }
-                        } catch (Exception e) {
-                            Log.i(TAG, "Failed " + e.getMessage());
-                        }
+                      handleOkHttpResult(response, addressList, map);
                     }
                 });
 
             } catch (MalformedURLException e) {
                 e.printStackTrace();
-            } catch (UnsupportedEncodingException e) {
+            } catch (UnsupportedEncodingException e) {}
+        }
+    }
+
+    /**
+     * Handles the okhttp response when it is successful and updates the commute info on the maps
+     * then updates addresslab to have a sorted list by destenation times then updates recyclerview
+     * @param response - json data of commute info
+     * @param addressList - address on the list
+     * @param map - google map needed for the adapter
+     */
+    private void handleOkHttpResult(Response response, List<Address> addressList, final GoogleMap map){
+        try {
+            String jsonData = response.body().string();
+            if (response.isSuccessful()) {
+                List<String> destinationTimes = getDurationOfCommutes(jsonData, mAppContext);
+                List<String> destinationDistances = getDistanceOfCommutes(jsonData, mAppContext);
+                for (int i = 0; i < destinationTimes.size(); i++) {
+                    addressList.get(i).setCommuteTime(destinationTimes.get(i));
+                    addressList.get(i).setDistance(destinationDistances.get(i));
+                }
+
+                mAppContext.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        List<Address> addressListToSort = SortAddress
+                            .sortAddresses(AddressLab.get(mAppContext)
+                                .getmAddressBook(), true);
+                        AddressLab.sAddressBook = addressListToSort;
+
+                        mRecyclerView.setAdapter(
+                            new CardViewMapInfoAdapter(mAppContext, map));
+                        mRecyclerView.getAdapter().notifyDataSetChanged();
+                    }
+                });
 
             }
-        } else {
-            Log.i(TAG, "its null");
-        }
+        } catch (Exception e) {}
     }
 
     public static JSONArray getFromJSONArray (String jsonData, Context appContext) throws JSONException{

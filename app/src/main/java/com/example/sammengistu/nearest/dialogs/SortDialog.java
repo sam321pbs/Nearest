@@ -14,9 +14,7 @@ import android.widget.CompoundButton;
 import android.widget.RadioButton;
 import android.widget.TextView;
 
-/**
- * Created by SamMengistu on 4/26/16.
- */
+
 public class SortDialog extends DialogFragment {
 
     public static final int SELECTED_SORT_METHOD_SEND_CODE = 12;
@@ -30,9 +28,9 @@ public class SortDialog extends DialogFragment {
     private TextView mDistanceTextView;
 
     public interface SortListener {
-        public void onDialogPositiveClick(DialogFragment dialog, boolean showDistance);
+         void onDialogPositiveClick(DialogFragment dialog, boolean showDistance);
 
-        public void onDialogNegativeClick(DialogFragment dialog);
+        void onDialogNegativeClick(DialogFragment dialog);
     }
 
     // Use this instance of the interface to deliver action events

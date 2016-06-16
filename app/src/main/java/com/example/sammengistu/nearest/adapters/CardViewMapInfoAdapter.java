@@ -10,6 +10,8 @@ import com.example.sammengistu.nearest.activities.MapsActivity;
 import com.example.sammengistu.nearest.models.Address;
 
 import android.app.Activity;
+import android.content.DialogInterface;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -56,6 +58,10 @@ public class CardViewMapInfoAdapter extends RecyclerView.Adapter
         if (position == 0){
             holder.mBackground.setBackgroundColor(mActivity.getResources()
                 .getColor(R.color.highlight_color));
+        } else {
+            holder.mBackground.setBackgroundColor(mActivity.getResources()
+                .getColor(R.color.white_color));
+
         }
 
         holder.mCommuteAddressTextView.setText(currentAddress.getFullAddress());
@@ -68,6 +74,24 @@ public class CardViewMapInfoAdapter extends RecyclerView.Adapter
                 double latitude = mAddressList.get(position).getLatitude();
                 LatLng currentItemOnList = new LatLng(latitude, longitude);
                 mGoogleMap.animateCamera(CameraUpdateFactory.newLatLngZoom(currentItemOnList, 15));
+            }
+        });
+
+        holder.mCardView.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                new AlertDialog.Builder(mActivity)
+                    .setTitle(mActivity.getString(R.string.are_you_sure_you_want_to_delete))
+                    .setMessage(holder.mCommuteAddressTextView.getText().toString())
+                    .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            AddressLab.sAddressBook.remove(position);
+                            CardViewMapInfoAdapter.this.notifyDataSetChanged();
+                        }
+                    })
+                    .show();
+                return false;
             }
         });
 

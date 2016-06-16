@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:app="http://schemas.android.com/apk/res-auto"
              android:layout_width="match_parent"
-             android:layout_height="match_parent"
-             xmlns:app="http://schemas.android.com/apk/res-auto">
+             android:layout_height="match_parent">
 
     <android.support.v7.widget.Toolbar
             android:id="@+id/toolbar_maps_activity"
@@ -20,14 +20,13 @@
                   android:layout_marginStart="30dp"
                   android:textColor="@color/white_color"/>
 
-        <TextView android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:id="@+id/sort_toolbar"
-                  android:textSize="20sp"
-                  android:text="Sort By"
-                  android:textColor="@color/white_color"
-                  android:layout_gravity="end"
-                  android:layout_marginEnd="16dp"/>
+
+        <ImageView android:layout_width="40dp"
+                   android:layout_height="40dp"
+                   android:id="@+id/refresh_icon"
+                   android:src="@mipmap/refresh_icon"
+                   android:layout_gravity="end"
+                   android:layout_marginEnd="20dp"/>
 
     </android.support.v7.widget.Toolbar>
 
@@ -43,16 +42,9 @@
                 android:layout_height="match_parent"
                 class="com.google.android.gms.maps.SupportMapFragment"/>
 
-        <!--<ListView-->
-                <!--android:layout_width="wrap_content"-->
-                <!--android:layout_height="wrap_content"-->
-                <!--android:id="@android:id/list"-->
-                <!--android:layout_weight=".2"-->
-                <!--android:elevation="12dp">-->
-        <!--</ListView>-->
 
         <include
-            layout="@layout/locations_view"/>
+                layout="@layout/locations_view"/>
 
         <android.support.design.widget.FloatingActionButton
                 style="@style/floating_action_button_prop"

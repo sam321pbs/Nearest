@@ -36,63 +36,53 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.DialogFragment;
-import android.support.v4.app.FragmentActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.DisplayMetrics;
 import android.util.Log;
-import android.util.TypedValue;
-import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewTreeObserver;
-import android.widget.ArrayAdapter;
 import android.widget.FrameLayout;
-import android.widget.ListView;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
-public class MapsActivity extends FragmentActivity implements
+public class MapsActivity extends AppCompatActivity implements
     GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
     SortDialog.SortListener {
 
-    private ObjectAnimator mObjectAnimatorEntireListSection;
     private static final String TAG = "MapActivity";
     private static final int GET_SORT_TYPE = 5;
-    private GoogleMap mMap;
-    private ListView mCommuteInfoListView;
     private static final int GET_TITLE = 2;
+
+    private final int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
+    private final String ANIMATION_TYPE = "translationY";
+    private final int ANIMATION_SHOW_LIST = 0;
+
+    private ObjectAnimator mObjectAnimatorEntireListSection;
+    private GoogleMap mMap;
     private Address mSelectedAddress;
     private List<android.location.Address> mGeocodeMatches;
-    private List<Address> mAddressesToShowOnMap = new ArrayList<>();
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
-    private ArrayAdapter<Address> mAdapter;
-
-    private List<Address> mAddresses;
-    private final int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
     private RecyclerView.LayoutManager mLayoutManager;
-
     private RecyclerView mRecyclerViewCommuteInfo;
-    private RecyclerView.Adapter mAdapterCards;
-
     private FloatingActionButton mFloatingActionButtonAddAddress;
     private TextView mShowHideTextView;
     private FrameLayout mLocationsDetailListView;
-    private final String ANIMATION_TYPE = "translationY";
-    private final int ANIMATION_SHOW_LIST = 0;
-    private final int ANIMATION_MINIMIZE_LIST = 750;
     private int mViewListHeight;
     public static int sFirstCardViewHeight;
     private FrameLayout mMiniToolbarSize;
     private int mMiniToolbarHight;
     private ObjectAnimator mObjectAnimatorFAB;
     private Toolbar mMyToolbar;
-    private TextView mSortTextView;
-
+    private ImageView mRefreshImageView;
+    private ObjectAnimator mObjectAnimatorRefresh;
     private boolean mShowEntireList;
 
     private View.OnClickListener mFABOnClickListener = new View.OnClickListener() {
@@ -142,16 +132,20 @@ public class MapsActivity extends FragmentActivity implements
             }
         });
 
-        mSortTextView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                SortDialog sortDialog = new SortDialog();
-                sortDialog.show(getSupportFragmentManager(), "Sort dialog");
-            }
-        });
-
+        mObjectAnimatorRefresh = ObjectAnimator.ofFloat(mRefreshImageView, "rotation",
+            720);
+        mObjectAnimatorRefresh.setDuration(1000);
         mFloatingActionButtonAddAddress.setOnClickListener(mFABOnClickListener);
         mMyToolbar.setBackgroundColor(getResources().getColor(R.color.theme_primary));
+        mRefreshImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                setUpCommuteDetails();
+                mRecyclerViewCommuteInfo.getAdapter().notifyDataSetChanged();
+
+                mObjectAnimatorRefresh.start();
+            }
+        });
 
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
             != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
@@ -176,8 +170,6 @@ public class MapsActivity extends FragmentActivity implements
                 .build();
         }
 
-        mAddresses = AddressLab.get(getApplicationContext()).getmAddressBook();
-
         mLayoutManager = new LinearLayoutManager(this);
 
         if (mRecyclerViewCommuteInfo != null) {
@@ -189,34 +181,42 @@ public class MapsActivity extends FragmentActivity implements
 
         mRecyclerViewCommuteInfo.setAdapter(new CardViewMapInfoAdapter(this, mMap));
 
+        setUpToolbar();
         setUpLayoutHeights();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+
+            case R.id.action_sort_by:
+                Log.i(TAG, "sort");
+                SortDialog sortDialog = new SortDialog();
+                sortDialog.show(getSupportFragmentManager(), "Sort dialog");
+                break;
+
+            case R.id.action_help:
+                //TODO: create help dialog
+                break;
+
+            default:
+                break;
+        }
+        return true;
     }
 
     private void initializeViews() {
         mMyToolbar = (Toolbar) findViewById(R.id.toolbar_maps_activity);
-
+        mRefreshImageView = (ImageView) findViewById(R.id.refresh_icon);
         mLocationsDetailListView = (FrameLayout) findViewById(R.id.locations_commute_info_view);
         mMiniToolbarSize = (FrameLayout) findViewById(R.id.mini_tool_bar_size);
 
         mShowHideTextView = (TextView) findViewById(R.id.show_hide_list);
         mFloatingActionButtonAddAddress = (FloatingActionButton) findViewById(R.id.fab_add_maps_activity);
-        mSortTextView = (TextView) findViewById(R.id.sort_toolbar);
         mRecyclerViewCommuteInfo = (RecyclerView) findViewById(R.id.map_info_recycler_view);
     }
 
     private void setUpLayoutHeights() {
-        ViewTreeObserver viewTreeObserver2 = mMiniToolbarSize.getViewTreeObserver();
-        if (viewTreeObserver2.isAlive()) {
-            viewTreeObserver2.addOnGlobalLayoutListener(
-                new ViewTreeObserver.OnGlobalLayoutListener() {
-                    @Override
-                    public void onGlobalLayout() {
-                        mMiniToolbarSize.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                        mMiniToolbarHight = mMiniToolbarSize.getHeight();
-                        Log.i(TAG, "MiniToolbar height = " + mMiniToolbarHight);
-                    }
-                });
-        }
 
         ViewTreeObserver viewTreeObserver = mLocationsDetailListView.getViewTreeObserver();
         if (viewTreeObserver.isAlive()) {
@@ -250,7 +250,6 @@ public class MapsActivity extends FragmentActivity implements
 
             mObjectAnimatorFAB = ObjectAnimator.ofFloat(mFloatingActionButtonAddAddress,
                 ANIMATION_TYPE, mViewListHeight - (sFirstCardViewHeight + 165));
-
         }
         setUpLayoutParamsForListView(showList);
 
@@ -265,61 +264,15 @@ public class MapsActivity extends FragmentActivity implements
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT
             );
-
         } else {
             params = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 sFirstCardViewHeight == 0 ?
                     300 : sFirstCardViewHeight + 100
             );
-
         }
 
         mLocationsDetailListView.setLayoutParams(params);
-    }
-
-    /**
-     * Sets up floating action bar based on the screen size
-     * if the width of the screen is less then 600pixels it
-     * will show th action button on the top of the screen
-     */
-    private void setUpFloatingActionButton() {
-
-
-        DisplayMetrics metrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(metrics);
-
-        int widthPixels = metrics.widthPixels;
-        int heightPixels = metrics.heightPixels;
-
-        float scaleFactor = metrics.density;
-
-        float widthDp = widthPixels / scaleFactor;
-        float heightDp = heightPixels / scaleFactor;
-
-        float smallestWidth = Math.min(widthDp, heightDp);
-
-        if (smallestWidth <= 600) {
-
-            //Device is a 7" tablet
-            int actionBarHeight = 10;
-            // Calculate ActionBar height
-            TypedValue tv = new TypedValue();
-            if (getTheme().resolveAttribute(android.R.attr.actionBarSize, tv, true)) {
-
-                actionBarHeight = TypedValue.complexToDimensionPixelSize(tv.data,
-                    getResources().getDisplayMetrics());
-            }
-
-            FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                FrameLayout.LayoutParams.WRAP_CONTENT
-            );
-
-            params.gravity = Gravity.END;
-            params.setMargins(0, actionBarHeight / 2, 16, 0);
-//            mNewPostFAB.setLayoutParams(params);
-        }
     }
 
     /**
@@ -366,17 +319,22 @@ public class MapsActivity extends FragmentActivity implements
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            if (!mGeocodeMatches.isEmpty()) {
-                latitude = mGeocodeMatches.get(0).getLatitude();
-                longitude = mGeocodeMatches.get(0).getLongitude();
-                addressToDisplay.setLatitude(latitude);
-                addressToDisplay.setLongitude(longitude);
+            try {
+                if (!mGeocodeMatches.isEmpty()) {
+                    latitude = mGeocodeMatches.get(0).getLatitude();
+                    longitude = mGeocodeMatches.get(0).getLongitude();
+                    addressToDisplay.setLatitude(latitude);
+                    addressToDisplay.setLongitude(longitude);
+                }
+                mMap.addMarker(
+                    new MarkerOptions().position(new LatLng(latitude, longitude))
+                        .visible(true)
+                        .title(addressToDisplay.getTitle())
+                );
+            } catch (NullPointerException e) {
+
             }
-            mMap.addMarker(
-                new MarkerOptions().position(new LatLng(latitude, longitude))
-                    .visible(true)
-                    .title(addressToDisplay.getTitle())
-            );
+
         }
 
     }
@@ -409,12 +367,7 @@ public class MapsActivity extends FragmentActivity implements
                 mRecyclerViewCommuteInfo.setAdapter(new CardViewMapInfoAdapter(
                     this, mMap));
 
-                SetUpCommuteInfoForAddresses setUpCommuteInfoForAddresses =
-                    new SetUpCommuteInfoForAddresses(this, getLastKnownLocation(),
-                        mRecyclerViewCommuteInfo);
-
-                setUpCommuteInfoForAddresses.setUpTravelInfo(AddressLab.get(this).getmAddressBook(),
-                    mMap);
+                setUpCommuteDetails();
 
                 animateMovedList(true);
 
@@ -444,6 +397,15 @@ public class MapsActivity extends FragmentActivity implements
                 // The user canceled the operation.
             }
         }
+    }
+
+    private void setUpCommuteDetails() {
+        SetUpCommuteInfoForAddresses setUpCommuteInfoForAddresses =
+            new SetUpCommuteInfoForAddresses(this, getLastKnownLocation(),
+                mRecyclerViewCommuteInfo);
+
+        setUpCommuteInfoForAddresses.setUpTravelInfo(AddressLab.get(this).getmAddressBook(),
+            mMap);
     }
 
     public Location getLastKnownLocation() {
@@ -518,6 +480,30 @@ public class MapsActivity extends FragmentActivity implements
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        mMyToolbar.inflateMenu(R.menu.menu_map);
+        mMyToolbar.setOnMenuItemClickListener(new Toolbar.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem item) {
+                Log.i(TAG, "Item click menu");
+                return onOptionsItemSelected(item);
+
+            }
+        });
+        return true;
+    }
+
+    private void setUpToolbar() {
+
+        setSupportActionBar(mMyToolbar);
+
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+        }
+    }
+
+    @Override
     public void onConnectionSuspended(int i) {
 
     }
@@ -530,10 +516,10 @@ public class MapsActivity extends FragmentActivity implements
     @Override
     public void onDialogPositiveClick(DialogFragment dialog, boolean distance) {
 
-        mAddresses = SortAddress.sortAddresses(mAddresses, distance);
+        AddressLab.sAddressBook =
+            SortAddress.sortAddresses(AddressLab.get(this).getmAddressBook(), distance);
 
-
-        mAdapter.notifyDataSetChanged();
+        Log.i(TAG, "distance = " + distance);
     }
 
     @Override
