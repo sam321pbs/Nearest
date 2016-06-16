@@ -14,7 +14,6 @@ import android.content.DialogInterface;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -53,8 +52,6 @@ public class CardViewMapInfoAdapter extends RecyclerView.Adapter
 
         Address currentAddress = mAddressList.get(position);
 
-        Log.i("cardview55", currentAddress.getFullAddress());
-
         if (position == 0){
             holder.mBackground.setBackgroundColor(mActivity.getResources()
                 .getColor(R.color.highlight_color));
@@ -83,7 +80,7 @@ public class CardViewMapInfoAdapter extends RecyclerView.Adapter
                 new AlertDialog.Builder(mActivity)
                     .setTitle(mActivity.getString(R.string.are_you_sure_you_want_to_delete))
                     .setMessage(holder.mCommuteAddressTextView.getText().toString())
-                    .setPositiveButton("Delete", new DialogInterface.OnClickListener() {
+                    .setPositiveButton(mActivity.getString(R.string.delete), new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             AddressLab.sAddressBook.remove(position);

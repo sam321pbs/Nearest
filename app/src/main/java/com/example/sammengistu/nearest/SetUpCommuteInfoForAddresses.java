@@ -66,9 +66,8 @@ public class SetUpCommuteInfoForAddresses {
                                 "origins=" + getAddressOfCurrentLocation(mCurrentLocation) +
                                 "&destinations=" + URLEncoder.encode(
                             createAddressUrl(addressList), "UTF-8").replaceAll("\\+", "%20") +
-                                "&units=imperial&types=geocode&language=en&sensor=true&key=" +
-                            //Todo: Remove key
-                            mAppContext.getString(R.string.api_key_url));
+                                "&units=imperial&types=geocode&language=en&sensor=true&key="
+                            );
 
                 Log.i(TAG, googlePlaces + "");
 

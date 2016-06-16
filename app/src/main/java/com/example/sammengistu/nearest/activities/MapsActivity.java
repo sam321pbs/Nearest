@@ -56,13 +56,18 @@ public class MapsActivity extends AppCompatActivity implements
     GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener,
     SortDialog.SortListener {
 
-    private static final String TAG = "MapActivity";
+    private static final String TAG = "MapActivity55";
     private static final int GET_SORT_TYPE = 5;
     private static final int GET_TITLE = 2;
+    private final int EXTRA_PADDING = 70;
+    private int mMinimizedListSize;
 
     private final int PLACE_AUTOCOMPLETE_REQUEST_CODE = 1;
     private final String ANIMATION_TYPE = "translationY";
+    private final String ANIMATION_ROTATION = "rotation";
+    private final int ROTATE_TWICE = 720;
     private final int ANIMATION_SHOW_LIST = 0;
+    private final int ONE_SECOND = 1000;
 
     private ObjectAnimator mObjectAnimatorEntireListSection;
     private GoogleMap mMap;
@@ -84,6 +89,7 @@ public class MapsActivity extends AppCompatActivity implements
     private ImageView mRefreshImageView;
     private ObjectAnimator mObjectAnimatorRefresh;
     private boolean mShowEntireList;
+    private int mFABSizeHeight;
 
     private View.OnClickListener mFABOnClickListener = new View.OnClickListener() {
         @Override
@@ -122,6 +128,18 @@ public class MapsActivity extends AppCompatActivity implements
 
         mGeocodeMatches = null;
         mShowEntireList = false;
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+            != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this,
+            Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
         mMap.setMyLocationEnabled(true);
 
         mShowHideTextView.setOnClickListener(new View.OnClickListener() {
@@ -132,43 +150,25 @@ public class MapsActivity extends AppCompatActivity implements
             }
         });
 
-        mObjectAnimatorRefresh = ObjectAnimator.ofFloat(mRefreshImageView, "rotation",
-            720);
-        mObjectAnimatorRefresh.setDuration(1000);
+        mObjectAnimatorRefresh = ObjectAnimator.ofFloat(mRefreshImageView,
+            ANIMATION_ROTATION, ROTATE_TWICE);
+
+        mObjectAnimatorRefresh.setDuration(ONE_SECOND);
+
         mFloatingActionButtonAddAddress.setOnClickListener(mFABOnClickListener);
-        mMyToolbar.setBackgroundColor(getResources().getColor(R.color.theme_primary));
+
         mRefreshImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 setUpCommuteDetails();
                 mRecyclerViewCommuteInfo.getAdapter().notifyDataSetChanged();
-
                 mObjectAnimatorRefresh.start();
             }
         });
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-            != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-            this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-            return;
-        }
+        createGoogleClient();
 
-        if (mGoogleApiClient == null) {
-            // ATTENTION: This "addApi(AppIndex.API)"was auto-generated to implement the App Indexing API.
-            // See https://g.co/AppIndexing/AndroidStudio for more information.
-            mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .build();
-        }
+        mMyToolbar.setBackgroundColor(getResources().getColor(R.color.theme_primary));
 
         mLayoutManager = new LinearLayoutManager(this);
 
@@ -185,24 +185,16 @@ public class MapsActivity extends AppCompatActivity implements
         setUpLayoutHeights();
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-
-            case R.id.action_sort_by:
-                Log.i(TAG, "sort");
-                SortDialog sortDialog = new SortDialog();
-                sortDialog.show(getSupportFragmentManager(), "Sort dialog");
-                break;
-
-            case R.id.action_help:
-                //TODO: create help dialog
-                break;
-
-            default:
-                break;
+    private void createGoogleClient(){
+        if (mGoogleApiClient == null) {
+            // ATTENTION: This "addApi(AppIndex.API)"was auto-generated to implement the App Indexing API.
+            // See https://g.co/AppIndexing/AndroidStudio for more information.
+            mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
         }
-        return true;
     }
 
     private void initializeViews() {
@@ -226,9 +218,38 @@ public class MapsActivity extends AppCompatActivity implements
                     public void onGlobalLayout() {
                         mLocationsDetailListView.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                         mViewListHeight = mLocationsDetailListView.getHeight();
+                        Log.i(TAG, "mLocationsView height = " + mViewListHeight);
+
+                    }
+                });
+        }
+
+        ViewTreeObserver viewTreeObserver2 = mMiniToolbarSize.getViewTreeObserver();
+        if (viewTreeObserver2.isAlive()) {
+            viewTreeObserver2.addOnGlobalLayoutListener(
+                new ViewTreeObserver.OnGlobalLayoutListener() {
+                    @Override
+                    public void onGlobalLayout() {
+                        mMiniToolbarSize.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                        mMiniToolbarHight = mMiniToolbarSize.getHeight();
+                        Log.i(TAG, "View height mini toolbar = " + mMiniToolbarHight);
+                    }
+                });
+        }
+
+        ViewTreeObserver viewTreeObserver3 = mFloatingActionButtonAddAddress.getViewTreeObserver();
+        if (viewTreeObserver3.isAlive()) {
+            viewTreeObserver3.addOnGlobalLayoutListener(
+                new ViewTreeObserver.OnGlobalLayoutListener() {
+                    @Override
+                    public void onGlobalLayout() {
+                        mFloatingActionButtonAddAddress.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                        mFABSizeHeight = mFloatingActionButtonAddAddress.getHeight();
+                        Log.i(TAG, "View FAB height = " + mFABSizeHeight);
+
                         animateMovedList(mShowEntireList);
 
-                        Log.i(TAG, "View hight = " + mViewListHeight);
+
                     }
                 });
         }
@@ -236,6 +257,8 @@ public class MapsActivity extends AppCompatActivity implements
 
     private void animateMovedList(boolean showList) {
         Log.i(TAG, "Cardview size = " + sFirstCardViewHeight);
+        mMinimizedListSize = sFirstCardViewHeight + mMiniToolbarHight + EXTRA_PADDING;
+
         if (showList) {
             mObjectAnimatorEntireListSection = ObjectAnimator.ofFloat(mLocationsDetailListView,
                 ANIMATION_TYPE, ANIMATION_SHOW_LIST);
@@ -243,13 +266,23 @@ public class MapsActivity extends AppCompatActivity implements
             mObjectAnimatorFAB = ObjectAnimator.ofFloat(mFloatingActionButtonAddAddress,
                 ANIMATION_TYPE, ANIMATION_SHOW_LIST);
 
+            mShowHideTextView.setText(
+                getResources().getString(R.string.minimize_list)
+            );
         } else {
 
+            mShowHideTextView.setText(
+                getResources().getString(R.string.show_list)
+            );
+
             mObjectAnimatorEntireListSection = ObjectAnimator.ofFloat(mLocationsDetailListView,
-                ANIMATION_TYPE, mViewListHeight - (sFirstCardViewHeight + 110));
+                ANIMATION_TYPE, mViewListHeight - mMinimizedListSize);
 
             mObjectAnimatorFAB = ObjectAnimator.ofFloat(mFloatingActionButtonAddAddress,
-                ANIMATION_TYPE, mViewListHeight - (sFirstCardViewHeight + 165));
+                ANIMATION_TYPE, mViewListHeight -
+                    ((mMinimizedListSize + mFABSizeHeight) - mMiniToolbarHight
+                    ));
+
         }
         setUpLayoutParamsForListView(showList);
 
@@ -268,7 +301,7 @@ public class MapsActivity extends AppCompatActivity implements
             params = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 sFirstCardViewHeight == 0 ?
-                    300 : sFirstCardViewHeight + 100
+                    300 : mMinimizedListSize
             );
         }
 
@@ -358,14 +391,11 @@ public class MapsActivity extends AppCompatActivity implements
 
                 Log.i(TAG, "Place: " + place.getAddress());
 
-                mSelectedAddress = null;
-
                 mSelectedAddress = new Address(place.getAddress().toString());
 
                 AddressLab.get(this).addAddress(mSelectedAddress);
 
-                mRecyclerViewCommuteInfo.setAdapter(new CardViewMapInfoAdapter(
-                    this, mMap));
+                mRecyclerViewCommuteInfo.setAdapter(new CardViewMapInfoAdapter(this, mMap));
 
                 setUpCommuteDetails();
 
@@ -427,6 +457,27 @@ public class MapsActivity extends AppCompatActivity implements
             mGoogleApiClient);
 
         return location;
+    }
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+
+            case R.id.action_sort_by:
+                Log.i(TAG, "sort");
+                SortDialog sortDialog = new SortDialog();
+                sortDialog.show(getSupportFragmentManager(), "Sort dialog");
+                break;
+
+            case R.id.action_help:
+                //TODO: create help dialog
+                break;
+
+            default:
+                break;
+        }
+        return true;
     }
 
     @Override
